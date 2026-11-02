@@ -753,14 +753,28 @@ function finishSession(){
 /* ===== rest timer (rest after a set, or after a full superset round) ===== */
 let audioCtx=null,overShown=false,beepPending=false,lastNextKey="";
 function nextUp(){if(!draft)return null;for(const bl of blocks(draft.exercises)){const R=Math.max(0,...bl.map(i=>draft.exercises[i].sets.length));for(let r=0;r<R;r++)for(const i of bl){const s=draft.exercises[i].sets[r];if(s&&!s.done)return{ei:i,si:r}}}return null}
-/* iOS mutes Web Audio when the ring switch is on silent, and has no navigator.vibrate: a "transient" audio session
-   (short alert sound, ducks the music instead of stopping it) lets the end-of-rest beep through. */
-function unlockAudio(){try{if(navigator.audioSession&&navigator.audioSession.type!=="transient")navigator.audioSession.type="transient"}catch(e){}
+/* End-of-rest alarm, meant to behave like the iPhone Clock timer: audible with the ring switch on silent and
+   pausing the music. iOS plays Web Audio as "ambient" sound (muted by the switch, mixed with the music), so the
+   alarm is an <audio> element playing a generated WAV, with the audio session set to "playback" just before it
+   rings. The element is unlocked silently (muted play) during the tap that starts the rest, because iOS only lets
+   a page start sound later if that element was first played from a tap. Web Audio stays as a fallback. */
+let alarmEl=null,alarmOk=false;
+function alarmWav(){const sr=22050,beeps=[0,.25,.5,1,1.25,1.5],len=Math.ceil(sr*1.75),d=new DataView(new ArrayBuffer(44+len*2));
+  const w=(o,t)=>{for(let i=0;i<t.length;i++)d.setUint8(o+i,t.charCodeAt(i))};
+  w(0,"RIFF");d.setUint32(4,36+len*2,true);w(8,"WAVE");w(12,"fmt ");d.setUint32(16,16,true);d.setUint16(20,1,true);d.setUint16(22,1,true);
+  d.setUint32(24,sr,true);d.setUint32(28,sr*2,true);d.setUint16(32,2,true);d.setUint16(34,16,true);w(36,"data");d.setUint32(40,len*2,true);
+  for(let i=0;i<len;i++){const t=i/sr;let v=0;for(const b of beeps){const x=t-b;if(x>=0&&x<.18){v=Math.sin(2*Math.PI*880*x)*Math.min(1,x/.01,(.18-x)/.02)}}d.setInt16(44+i*2,v*.8*32767,true)}
+  return URL.createObjectURL(new Blob([d],{type:"audio/wav"}))}
+function setSession(type){try{if(navigator.audioSession)navigator.audioSession.type=type}catch(e){}}
+function unlockAudio(){
+  try{if(!alarmEl){alarmEl=new Audio(alarmWav());alarmEl.preload="auto";alarmEl.addEventListener("ended",()=>setSession("auto"))}
+    if(!alarmOk&&alarmEl.paused){alarmEl.muted=true;const pr=alarmEl.play();pr&&pr.then(()=>{alarmOk=true;alarmEl.pause();alarmEl.currentTime=0;alarmEl.muted=false}).catch(()=>{alarmEl.muted=false})}}catch(e){}
   try{if(!audioCtx){const AC=window.AudioContext||window.webkitAudioContext;if(AC)audioCtx=new AC()}audioCtx&&audioCtx.resume&&audioCtx.resume()}catch(e){}}
 function startTimer(sec,label){draft.timer={kind:"rest",end:Date.now()+sec*1000,total:sec,label};saveDraft();overShown=false;unlockAudio();showTimer()}
 function startChain(label){draft.timer={kind:"chain",start:Date.now(),label};saveDraft();showTimer()}
 function stopTimer(){if(draft){draft.timer=null;saveDraft()}const el=$("#timer");el.hidden=true;el.classList.remove("over","chain")}
-function beep(){try{if(!audioCtx)return;const t=audioCtx.currentTime;[0,.22,.44].forEach(o=>{const g=audioCtx.createGain(),os=audioCtx.createOscillator();os.frequency.value=880;os.connect(g);g.connect(audioCtx.destination);g.gain.setValueAtTime(.0001,t+o);g.gain.exponentialRampToValueAtTime(.3,t+o+.02);g.gain.exponentialRampToValueAtTime(.0001,t+o+.18);os.start(t+o);os.stop(t+o+.2)})}catch(e){}}
+function beepWA(){try{if(!audioCtx)return;const t=audioCtx.currentTime;[0,.22,.44].forEach(o=>{const g=audioCtx.createGain(),os=audioCtx.createOscillator();os.frequency.value=880;os.connect(g);g.connect(audioCtx.destination);g.gain.setValueAtTime(.0001,t+o);g.gain.exponentialRampToValueAtTime(.3,t+o+.02);g.gain.exponentialRampToValueAtTime(.0001,t+o+.18);os.start(t+o);os.stop(t+o+.2)})}catch(e){}}
+function beep(){if(alarmEl){setSession("playback");alarmEl.muted=false;try{alarmEl.currentTime=0}catch(e){}const pr=alarmEl.play();if(pr){pr.catch(()=>{setSession("auto");beepWA()});return}}beepWA()}
 function paintNext(){
   const n=nextUp();const el=$("#timerNext");const key=n?n.ei+"-"+n.si+"-"+draft.exercises[n.ei].name:"none";
   if(key===lastNextKey)return;lastNextKey=key;
@@ -1021,6 +1035,13 @@ function openHist(name,exId){
       return `<div class="hrow"><span class="d">${DAYS[d.getDay()].slice(0,3)}. ${fmtDateShort(s.date)}</span><span class="num" style="font-weight:700">${v==null?"–":fmt(v)+" "+unit(m)}</span><span class="s">${esc(setsTxt(e))}</span></div>`}).join("")}`;
   $("#sheet").hidden=false;
 }
+/* while a sheet or an alert is open, the page behind must not scroll (dragging the scrim, or a sheet whose content
+   fits and so chains its scroll to the page). iOS ignores overflow:hidden on body, so the body is pinned in place. */
+let lockY=null;
+function syncScrollLock(){const open=!$("#sheet").hidden||!$("#modal").hidden;const b=document.body.style;
+  if(open&&lockY==null){lockY=window.scrollY;b.position="fixed";b.top=-lockY+"px";b.left="0";b.right="0"}
+  else if(!open&&lockY!=null){b.position=b.top=b.left=b.right="";window.scrollTo(0,lockY);lockY=null}}
+["#sheet","#modal"].forEach(id=>new MutationObserver(syncScrollLock).observe($(id),{attributes:true,attributeFilter:["hidden"]}));
 function closeSheet(){$("#sheet").hidden=true;pickCb=null}
 let modalCb=null;
 function confirmBox(title,msg,okLabel,onOk){$("#mTitle").textContent=title;$("#mMsg").textContent=msg;const b=$("#mBtns");b.className="mbtns";
