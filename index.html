@@ -12,11 +12,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" type="image/png" href="icon-192.png">
-<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
-</head>
-<body>
 <title>CaliTrack</title>
-<meta name="claude:viewport-fit-sides" content="cover">
 <style>
 /* CaliTrack — native iOS feel: system font (SF Pro on iPhone), grouped inset lists, one cobalt accent, true-black dark mode.
    Layout: one column, large titles, borderless rounded groups, translucent tab bar, floating rest timer. */
@@ -41,12 +37,19 @@
   --bar:rgba(22,22,24,.86); --scrim:rgba(0,0,0,.6); color-scheme:dark}
 
 *{box-sizing:border-box}
+[hidden]{display:none!important}
+img{max-width:100%}
+/* manipulation: no double-tap zoom when tapping +/− fast (pinch zoom stays); no font inflation in landscape */
+html{touch-action:manipulation;-webkit-text-size-adjust:100%}
 html,body{background:var(--bg);color:var(--ink)}
-body{font-family:var(--f-body);font-size:17px;line-height:1.35;letter-spacing:-.01em;
+body{margin:0;font-family:var(--f-body);font-size:17px;line-height:1.35;letter-spacing:-.01em;
+  padding-top:env(safe-area-inset-top,0px);
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
   -webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
 button,input,select,textarea{font:inherit;color:inherit;letter-spacing:inherit}
 button{cursor:pointer}
+/* controls: a long press must not select their label or open the callout (content text stays selectable) */
+button,.tab,.chip,.pcol div,.swipe-del{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .num{font-variant-numeric:tabular-nums}
 
@@ -174,7 +177,7 @@ h3{font-family:var(--f-display);font-weight:600;font-size:17px;line-height:1.25;
 .lvlnav .btn{flex:1}
 .sheet{position:fixed;inset:0;z-index:40;background:var(--scrim);display:flex;align-items:flex-end;justify-content:center}
 .sheet[hidden]{display:none}
-.sheet .in{background:var(--bg);border-radius:16px 16px 0 0;width:100%;max-width:560px;max-height:80vh;overflow:auto;
+.sheet .in{background:var(--bg);border-radius:16px 16px 0 0;width:100%;max-width:560px;max-height:80vh;overflow:auto;overscroll-behavior:contain;
   padding-top:8px;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .sheet .in::before{content:"";display:block;width:36px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 12px}
 .hrow{padding:11px 0;border-top:.5px solid var(--line);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;font-size:15px}
@@ -249,7 +252,7 @@ select.pick{width:100%;min-height:48px;border:0;border-radius:12px;background:va
 .check{display:flex;align-items:center;gap:8px;min-height:40px;font-size:15px;font-weight:500}
 .check input{width:20px;height:20px;accent-color:var(--accent)}
 .toast{position:fixed;left:50%;transform:translateX(-50%);top:calc(10px + env(safe-area-inset-top,0px));z-index:30;background:var(--ink);color:var(--bg);padding:11px 16px;border-radius:14px;font-weight:600;font-size:15px;max-width:calc(100% - 32px);box-shadow:0 10px 30px rgba(0,0,0,.22)}
-textarea.dump{width:100%;min-height:140px;border:0;border-radius:10px;background:var(--track);padding:10px;font-family:ui-monospace,Menlo,monospace;font-size:12px}
+textarea.dump{width:100%;min-height:140px;border:0;border-radius:10px;background:var(--track);padding:10px;font-family:ui-monospace,Menlo,monospace;font-size:16px}
 .empty{padding:22px 14px;text-align:center;color:var(--muted)}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 
@@ -288,7 +291,7 @@ textarea.dump{width:100%;min-height:140px;border:0;border-radius:10px;background
 .pheads{display:grid;grid-template-columns:1fr 1fr;text-align:center;font-size:13px;color:var(--muted);margin-top:6px}
 .picker{position:relative;display:grid;grid-template-columns:1fr 1fr;height:220px;margin:4px 0 12px}
 .picker .band{position:absolute;left:8px;right:8px;top:88px;height:44px;border-radius:10px;background:var(--track);pointer-events:none}
-.pcol{position:relative;height:220px;overflow-y:scroll;scroll-snap-type:y mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:88px 0;
+.pcol{position:relative;height:220px;overflow-y:scroll;overscroll-behavior:contain;scroll-snap-type:y mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:88px 0;
   -webkit-mask-image:linear-gradient(transparent,#000 32%,#000 68%,transparent);mask-image:linear-gradient(transparent,#000 32%,#000 68%,transparent)}
 .pcol::-webkit-scrollbar{display:none}
 .pcol div{height:44px;line-height:44px;text-align:center;scroll-snap-align:center;font-size:24px;font-variant-numeric:tabular-nums;color:var(--muted);cursor:pointer}
@@ -331,7 +334,12 @@ textarea.inp{min-height:110px;padding:10px 12px;line-height:1.4;resize:vertical}
 .search{min-height:40px;border:0;border-radius:10px;background:var(--track);padding:0 12px;width:100%;font-size:16px}
 
 .steps .inp{background:var(--card)}
+
+/* keyboard open: the fixed tab bar and rest timer would cover the field being typed in (the timer keeps running) */
+body.kb .tabbar,body.kb .timer{display:none}
 </style>
+</head>
+<body>
 
 <div class="app">
   <header class="top">
@@ -386,7 +394,7 @@ const MONTHS=["janvier","février","mars","avril","mai","juin","juillet","août"
 const MSHORT=["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
 const DAYS=["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"];
 const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
-const lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
+const lsSet=(k,v)=>{try{localStorage.setItem(k,v);return true}catch(e){return false}};
 const lsDel=k=>{try{localStorage.removeItem(k)}catch(e){}};
 let toastT;
 function toast(msg){const t=$("#toast");t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2400)}
@@ -461,9 +469,13 @@ if(!S||!Array.isArray(S.exercises)||!Array.isArray(S.routines)){S=Object.assign(
 let draft=null;try{draft=JSON.parse(lsGet(DRAFT)||"null")}catch(e){}
 let ui={tab:"enregistrer",exo:null,period:3,calMonth:null,calDay:null,editRoutine:null,editEx:null,exQuery:""};
 try{Object.assign(ui,JSON.parse(lsGet(UIK)||"{}"),{editRoutine:null,editEx:null})}catch(e){}
-function save(){lsSet(LS,JSON.stringify(S))}
-function saveDraft(){draft?lsSet(DRAFT,JSON.stringify(draft)):lsDel(DRAFT)}
-function saveUI(){lsSet(UIK,JSON.stringify({tab:ui.tab,exo:ui.exo,period:ui.period}))}
+/* a failed write (quota, storage unavailable) must not go unnoticed: the data only lives on this phone */
+let saveFailed=false;
+function saveOk(ok){if(!ok&&!saveFailed)toast("Enregistrement impossible : exporte tes données (Historique).");saveFailed=!ok}
+function save(){saveOk(lsSet(LS,JSON.stringify(S)))}
+function saveDraft(){if(draft)saveOk(lsSet(DRAFT,JSON.stringify(draft)));else lsDel(DRAFT)}
+function saveUI(){lsSet(UIK,JSON.stringify({tab:ui.tab,exo:ui.exo,period:ui.period,lastExport:ui.lastExport||0}))}
+try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist().catch(()=>{})}catch(e){}
 save();
 
 /* ================= model helpers ================= */
@@ -582,8 +594,11 @@ const TABS=[["enregistrer","Enregistrer",I.rec],["routines","Routines",I.list],[
 /* ================= theme ================= */
 function effectiveDark(){const t=document.documentElement.getAttribute("data-theme");if(t)return t==="dark";return window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches}
 function paintThemeBtn(){const d=effectiveDark();const b=$("#themeBtn");b.innerHTML=d?I.sun:I.moon;b.setAttribute("aria-label",d?"Passer en mode clair":"Passer en mode sombre")}
-(function(){const t=lsGet(THEME);if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t)})();
-$("#themeBtn").addEventListener("click",()=>{const n=effectiveDark()?"light":"dark";document.documentElement.setAttribute("data-theme",n);lsSet(THEME,n);paintThemeBtn();if(ui.tab==="progres")render()});
+/* status bar: the two theme-color metas follow the OS scheme; when the theme is forced, both take the forced colour */
+function paintThemeColor(){const t=document.documentElement.getAttribute("data-theme");
+  document.querySelectorAll('meta[name="theme-color"]').forEach(m=>{const dark=t?t==="dark":/dark/.test(m.media);m.content=dark?"#000000":"#F2F2F7"})}
+(function(){const t=lsGet(THEME);if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);paintThemeColor()})();
+$("#themeBtn").addEventListener("click",()=>{const n=effectiveDark()?"light":"dark";document.documentElement.setAttribute("data-theme",n);lsSet(THEME,n);paintThemeColor();paintThemeBtn();if(ui.tab==="progres")render()});
 try{matchMedia("(prefers-color-scheme: dark)").addEventListener("change",paintThemeBtn)}catch(e){}
 
 /* ================= render ================= */
@@ -738,7 +753,10 @@ function finishSession(){
 /* ===== rest timer (rest after a set, or after a full superset round) ===== */
 let audioCtx=null,overShown=false,beepPending=false,lastNextKey="";
 function nextUp(){if(!draft)return null;for(const bl of blocks(draft.exercises)){const R=Math.max(0,...bl.map(i=>draft.exercises[i].sets.length));for(let r=0;r<R;r++)for(const i of bl){const s=draft.exercises[i].sets[r];if(s&&!s.done)return{ei:i,si:r}}}return null}
-function unlockAudio(){try{if(!audioCtx){const AC=window.AudioContext||window.webkitAudioContext;if(AC)audioCtx=new AC()}audioCtx&&audioCtx.resume&&audioCtx.resume()}catch(e){}}
+/* iOS mutes Web Audio when the ring switch is on silent, and has no navigator.vibrate: a "transient" audio session
+   (short alert sound, ducks the music instead of stopping it) lets the end-of-rest beep through. */
+function unlockAudio(){try{if(navigator.audioSession&&navigator.audioSession.type!=="transient")navigator.audioSession.type="transient"}catch(e){}
+  try{if(!audioCtx){const AC=window.AudioContext||window.webkitAudioContext;if(AC)audioCtx=new AC()}audioCtx&&audioCtx.resume&&audioCtx.resume()}catch(e){}}
 function startTimer(sec,label){draft.timer={kind:"rest",end:Date.now()+sec*1000,total:sec,label};saveDraft();overShown=false;unlockAudio();showTimer()}
 function startChain(label){draft.timer={kind:"chain",start:Date.now(),label};saveDraft();showTimer()}
 function stopTimer(){if(draft){draft.timer=null;saveDraft()}const el=$("#timer");el.hidden=true;el.classList.remove("over","chain")}
@@ -951,7 +969,7 @@ function vHistory(){
    <h2>Records</h2>
    <div class="card">${recs.length?recs.map(r=>`<div class="rec"><span class="name">${esc(r.nm)}</span><span class="val">${fmt(r.best.v)} ${r.mm==="kick"?"s":unit(r.mm)}</span><span class="when">${r.mm==="kick"?"Meilleure tenue libre":metricLabel(r.mm)} · ${fmtDateShort(r.best.date)} ${parseISO(r.best.date).getFullYear()}</span></div>`).join(""):'<div class="empty">Pas encore de record.</div>'}</div>
    <h2>Mes données</h2>
-   <div class="card stack"><p class="muted" style="margin:0;font-size:14px">Enregistré sur cet appareil. Exporte régulièrement un fichier de sauvegarde.</p>
+   <div class="card stack">${backupDue()?`<div class="banner">${ui.lastExport?`Dernière sauvegarde le ${fmtDateShort(iso(new Date(ui.lastExport)))}.`:"Aucune sauvegarde pour l'instant."} Tes séances n'existent que sur ce téléphone : sauvegarde-les dans un fichier.</div>`:""}<p class="muted" style="margin:0;font-size:14px">Enregistré sur cet appareil. Exporte régulièrement un fichier de sauvegarde.</p>
     <button class="btn block" data-act="export">Sauvegarder dans un fichier</button><div id="dumpBox" hidden></div>
     <button class="btn block" data-act="export-csv">Exporter pour Excel ou Sheets (CSV)</button>
     <button class="btn block" data-act="import">Importer un fichier de sauvegarde</button><div id="importBox" hidden></div>
@@ -966,16 +984,19 @@ function csvData(){
   sortedSessions().forEach(s=>s.exercises.forEach(e=>e.sets.forEach((x,i)=>{lines.push([s.date,q(s.routine),q(e.name),i+1,nn(x.reps),nn(x.g),nn(x.d),nn(x.sec),nn(x.kg),nn(x.att),nn(x.holds),nn(x.best),q(e.tempo||"")].join(";"))})));
   return{csv:"﻿"+lines.join("\r\n"),rows:lines.length-1};
 }
+/* backup reminder: sessions logged since the last JSON export, and that export is over 14 days old (or never done) */
+function backupDue(){if(!S.sessions.length)return false;const last=ui.lastExport||0;if(Date.now()-last<14*DAY)return false;const d=last?iso(new Date(last)):"";return S.sessions.some(s=>s.date>=d)}
+function markExported(kind){if(kind!=="json")return;ui.lastExport=Date.now();saveUI();if(ui.tab==="historique")render()}
 async function doExport(kind){
   let data,name;
   if(kind==="csv"){const c=csvData();if(!c.rows){toast("Aucune séance à exporter.");return}data=c.csv;name="calitrack-"+iso(today())+".csv"}else{data=exportData();name="calitrack-"+iso(today())+".json"}
   if(!window.claude){
     const type=kind==="csv"?"text/csv":"application/json";
-    try{const f=new File([data],name,{type});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:name});return}}catch(e){if(e&&e.name==="AbortError")return}
-    try{const url=URL.createObjectURL(new Blob([data],{type}));const a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000);toast("Fichier prêt : "+name);return}catch(e){}
+    try{const f=new File([data],name,{type});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:name});markExported(kind);return}}catch(e){if(e&&e.name==="AbortError")return}
+    try{const url=URL.createObjectURL(new Blob([data],{type}));const a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000);toast("Fichier prêt : "+name);markExported(kind);return}catch(e){}
   }
   let dl=null;try{dl=window.claude&&window.claude.use?await window.claude.use("downloads"):null}catch(e){}
-  if(dl){try{await dl.save({filename:name,data});toast("Sauvegarde enregistrée.");return}catch(e){if(e&&e.code==="declined")return}}
+  if(dl){try{await dl.save({filename:name,data});toast("Sauvegarde enregistrée.");markExported(kind);return}catch(e){if(e&&e.code==="declined")return}}
   const box=$("#dumpBox");if(!box)return;box.hidden=false;
   box.innerHTML=`<p class="muted" style="font-size:13px;margin:0 0 6px">Le téléchargement n'est pas disponible ici. Copie ce texte dans un fichier nommé ${esc(name)}.</p><textarea class="dump" id="dump" readonly aria-label="Données exportées">${esc(data)}</textarea><button class="btn small" data-act="copy" style="margin-top:6px">Copier</button>`;
 }
@@ -1189,6 +1210,10 @@ document.addEventListener("change",ev=>{
   if(t.dataset.sf==="lo"||t.dataset.sf==="hi"){const ex=exById(ui.editEx);if(!ex)return;const s=ex.steps[+t.dataset.step];const v=numOrNull(t.value);s[t.dataset.sf]=v==null?null:Math.max(0,Math.round(v));
     if(s.lo==null)s.hi=null;else if(s.hi==null||s.hi<s.lo)s.hi=s.lo;exChanged(ex,true);return}
 });
+/* hide the fixed tab bar and rest timer while the keyboard is up (see body.kb in the CSS) */
+const typing=t=>t&&(t.tagName==="TEXTAREA"&&!t.readOnly||t.tagName==="INPUT"&&!/^(checkbox|radio|file|button|submit|range)$/.test(t.type));
+document.addEventListener("focusin",ev=>{if(typing(ev.target))document.body.classList.add("kb")});
+document.addEventListener("focusout",ev=>{if(typing(ev.target))setTimeout(()=>{if(!typing(document.activeElement))document.body.classList.remove("kb")},0)});
 document.addEventListener("keydown",ev=>{if(ev.key==="Escape"){if(!$("#modal").hidden)closeModal();else if(!$("#sheet").hidden)closeSheet()}});
 document.addEventListener("focusout",ev=>{const t=ev.target;if(t.dataset&&t.dataset.sugg){setTimeout(()=>{const box=t.dataset.sugg==="live"?$("#sugg-live"):$("#sugg-"+t.dataset.item);if(box&&!box.contains(document.activeElement))box.hidden=true},200)}});
 window.addEventListener("hashchange",()=>{const h=location.hash.slice(1);if(TABS.some(t=>t[0]===h)&&h!==ui.tab){ui.tab=h;ui.editRoutine=null;ui.editEx=null;render()}});
