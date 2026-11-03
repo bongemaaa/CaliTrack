@@ -1085,7 +1085,10 @@ async function doExport(kind){
   if(kind==="csv"){const c=csvData();if(!c.rows){toast("Aucune séance à exporter.");return}data=c.csv;name="calitrack-"+iso(today())+".csv"}else{data=exportData();name="calitrack-"+iso(today())+".json"}
   if(!window.claude){
     const type=kind==="csv"?"text/csv":"application/json";
-    try{const f=new File([data],name,{type});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:name});markExported(kind);return}}catch(e){if(e&&e.name==="AbortError")return}
+    /* files only: a title becomes a second item in the iOS sheet ("2 éléments").
+       iOS can report "AbortError" even after "Enregistrer dans Fichiers" succeeded, so the user is asked. */
+    try{const f=new File([data],name,{type});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f]});markExported(kind);return}}
+    catch(e){if(e&&e.name==="AbortError"){if(kind==="json")askBox("Fichier enregistré ?","Si la sauvegarde a bien été enregistrée (Fichiers, AirDrop…), le rappel disparaît pour 14 jours.","Oui",()=>markExported(kind));return}}
     try{const url=URL.createObjectURL(new Blob([data],{type}));const a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000);toast("Fichier prêt : "+name);markExported(kind);return}catch(e){}
   }
   let dl=null;try{dl=window.claude&&window.claude.use?await window.claude.use("downloads"):null}catch(e){}
@@ -1128,6 +1131,9 @@ function closeSheet(){$("#sheet").hidden=true;pickCb=null}
 let modalCb=null;
 function confirmBox(title,msg,okLabel,onOk){$("#mTitle").textContent=title;$("#mMsg").textContent=msg;const b=$("#mBtns");b.className="mbtns";
   b.innerHTML=`<button data-act="m-cancel">Annuler</button><button class="del" data-act="m-ok">${esc(okLabel||"Supprimer")}</button>`;modalCb=onOk;$("#modal").hidden=false}
+/* non-destructive yes / no question (same alert, no red button) */
+function askBox(title,msg,yes,onYes){$("#mTitle").textContent=title;$("#mMsg").textContent=msg;const b=$("#mBtns");b.className="mbtns";
+  b.innerHTML=`<button data-act="m-cancel">Non</button><button data-act="m-ok" style="font-weight:600">${esc(yes)}</button>`;modalCb=onYes;$("#modal").hidden=false}
 function alertBox(title,msg){$("#mTitle").textContent=title;$("#mMsg").textContent=msg;const b=$("#mBtns");b.className="mbtns one";b.innerHTML=`<button data-act="m-cancel">OK</button>`;modalCb=null;$("#modal").hidden=false}
 function closeModal(){$("#modal").hidden=true;modalCb=null}
 let pickCb=null;
