@@ -38,6 +38,7 @@ Enregistrer · Routines · Exercices · Progrès · Historique
 
 - **Bibliothèque d'exercices** : mesure en reps / secondes / tentatives ; option avec charge ; option unilatéral ; option « sollicite les poignets » (`wrist`) ; progression aucune / signal / charge / durée / étapes ; fiche « Comment faire ».
 - **Routines** : séries, objectif min–max, repos réglé via une roue min/s, enchaîner, level up auto, note.
+- **Progrès** : courbe par exercice (1 / 3 / 6 mois / Tout), record de l'exercice sous la courbe ; doigt maintenu sur la courbe = repère qui affiche la séance (date, séries).
 
 ### Level up / régression
 
