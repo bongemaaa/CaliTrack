@@ -50,7 +50,7 @@ Enregistrer · Routines · Exercices · Progrès · Historique
 - Style iOS natif, police système.
 - Accent bleu cobalt (`#2457F5`).
 - Mode sombre : fond noir.
-- Suppression : glisser vers la gauche, puis confirmation (bouton « Supprimer » rouge / « Annuler »).
+- Suppression : glisser vers la gauche puis toucher « Supprimer », ou glisser jusqu'au bout (au-delà de la moitié de la ligne) ; dans les deux cas, confirmation (bouton « Supprimer » rouge / « Annuler » qui remet la ligne en place).
 
 ## Garde-fou poignets
 

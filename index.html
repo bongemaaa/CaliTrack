@@ -83,8 +83,11 @@ h3{font-family:var(--f-display);font-weight:600;font-size:17px;line-height:1.25;
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 
 .card{background:var(--card);border:0;border-radius:var(--r);padding:14px 16px;min-width:0}
-.card.tap{text-align:left;width:100%;display:block;transition:transform .12s ease,background .12s}
-.card.tap:active{transform:scale(.985);background:var(--track)}
+.card.tap{position:relative;text-align:left;width:100%;display:block;transition:transform 160ms var(--ease-out)}
+/* press: a translucent veil over the whole card, so the chips (same grey as a pressed background) stay visible */
+.card.tap::after{content:"";position:absolute;inset:0;border-radius:inherit;background:var(--press);opacity:0;pointer-events:none;transition:opacity 200ms ease-out}
+.card.tap:active{transform:scale(.985)}
+.card.tap:active::after{opacity:1;transition-duration:0ms}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .chip{font-size:13px;padding:3px 9px;border-radius:7px;background:var(--track);color:var(--ink);white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .chip b{color:var(--accent-text);margin-right:4px;font-weight:700}
@@ -297,7 +300,7 @@ textarea.dump{width:100%;min-height:140px;border:0;border-radius:10px;background
 @media (prefers-reduced-motion: reduce){
   .btn.block:active,.done:active,.card.tap:active{transform:none}
   .done.pop path{animation:none}
-  .swipe-fg{transition:none}
+  .swipe-fg,.swipe-del{transition:none}
   .sheet.closing .in,.modal.closing .box{transform:none}
   .toast.closing{transform:translateX(-50%)}
   @starting-style{.sheet .in{transform:none}.modal .box{transform:none}.toast{transform:translateX(-50%)}}
@@ -313,12 +316,18 @@ textarea.dump{width:100%;min-height:140px;border:0;border-radius:10px;background
 
 /* swipe to delete */
 .swipe{position:relative;border-radius:var(--r);overflow:hidden}
-.swipe-del{position:absolute;right:0;top:0;bottom:0;width:96px;border:0;background:var(--bad);color:#fff;font-weight:600;font-size:15px;border-radius:0 var(--r) var(--r) 0;visibility:hidden}
+.swipe-del{position:absolute;right:0;top:0;bottom:0;width:96px;border:0;background:var(--bad);color:#fff;font-weight:600;font-size:15px;border-radius:0 var(--r) var(--r) 0;visibility:hidden;
+  display:flex;align-items:center;justify-content:center;white-space:nowrap;transition:width 300ms var(--ease-drawer)}
+.swipe.dragging>.swipe-del{transition:none}
+/* full swipe (past half the row): the label jumps against the content edge = "release to delete" */
+.swipe.armed>.swipe-del{justify-content:flex-start;padding-left:22px}
+.swipe.full>.swipe-fg{transform:translateX(-100%)}
+.swipe.full>.swipe-del{width:100%;visibility:visible;justify-content:flex-start;padding-left:22px}
 .swipe.open>.swipe-del,.swipe.dragging>.swipe-del{visibility:visible}
 .swipe-fg{position:relative;z-index:1;background:var(--card);border-radius:var(--r);transition:transform 300ms var(--ease-drawer);touch-action:pan-y;will-change:transform}
 /* the red button stays visible while the row slides back, and fills the gap when the row is pulled past it */
 .swipe.settling>.swipe-del{visibility:visible}
-.swipe.dragging,.swipe.open,.swipe.settling{background:var(--bad)}
+.swipe.dragging,.swipe.open,.swipe.settling,.swipe.full{background:var(--bad)}
 .swipe.dragging .lrow:active{background:transparent}
 .swipe.open>.swipe-fg{transform:translateX(-96px);border-radius:var(--r) 0 0 var(--r)}
 .lrow{display:flex;align-items:center;gap:12px;padding:13px 16px;width:100%;text-align:left;background:none;border:0;min-height:60px}
@@ -1201,14 +1210,15 @@ function openHist(name,exId){
 function blockBehind(ev){const sc=ev.target.closest&&ev.target.closest(".pcol,.sheet .in");if(sc&&sc.scrollHeight>sc.clientHeight+1)return;if(ev.cancelable)ev.preventDefault()}
 ["#sheet","#modal"].forEach(id=>$(id).addEventListener("touchmove",blockBehind,{passive:false}));
 function closeSheet(){hideEl($("#sheet"),260);pickCb=null}
-let modalCb=null;
-function confirmBox(title,msg,okLabel,onOk){$("#mTitle").textContent=title;$("#mMsg").textContent=msg;const b=$("#mBtns");b.className="mbtns";
-  b.innerHTML=`<button data-act="m-cancel">Annuler</button><button class="del" data-act="m-ok">${esc(okLabel||"Supprimer")}</button>`;modalCb=onOk;showEl($("#modal"))}
+let modalCb=null,modalCancelCb=null;
+function confirmBox(title,msg,okLabel,onOk,onCancel){$("#mTitle").textContent=title;$("#mMsg").textContent=msg;const b=$("#mBtns");b.className="mbtns";
+  b.innerHTML=`<button data-act="m-cancel">Annuler</button><button class="del" data-act="m-ok">${esc(okLabel||"Supprimer")}</button>`;modalCb=onOk;modalCancelCb=onCancel||null;showEl($("#modal"))}
 /* non-destructive yes / no question (same alert, no red button) */
 function askBox(title,msg,yes,onYes){$("#mTitle").textContent=title;$("#mMsg").textContent=msg;const b=$("#mBtns");b.className="mbtns";
-  b.innerHTML=`<button data-act="m-cancel">Non</button><button data-act="m-ok" style="font-weight:600">${esc(yes)}</button>`;modalCb=onYes;showEl($("#modal"))}
-function alertBox(title,msg){$("#mTitle").textContent=title;$("#mMsg").textContent=msg;const b=$("#mBtns");b.className="mbtns one";b.innerHTML=`<button data-act="m-cancel">OK</button>`;modalCb=null;showEl($("#modal"))}
-function closeModal(){hideEl($("#modal"),170);modalCb=null}
+  b.innerHTML=`<button data-act="m-cancel">Non</button><button data-act="m-ok" style="font-weight:600">${esc(yes)}</button>`;modalCb=onYes;modalCancelCb=null;showEl($("#modal"))}
+function alertBox(title,msg){$("#mTitle").textContent=title;$("#mMsg").textContent=msg;const b=$("#mBtns");b.className="mbtns one";b.innerHTML=`<button data-act="m-cancel">OK</button>`;modalCb=null;modalCancelCb=null;showEl($("#modal"))}
+/* cancelled = Annuler, tap on the backdrop or Escape: runs the cancel callback (a fully swiped row slides back) */
+function closeModal(cancelled){const c=cancelled?modalCancelCb:null;hideEl($("#modal"),170);modalCb=null;modalCancelCb=null;c&&c()}
 let pickCb=null;
 function openRestPicker(val,cb){
   val=Math.max(0,Math.min(659,val||0));const m=Math.floor(val/60),s=val%60;
@@ -1233,16 +1243,22 @@ document.addEventListener("pointerdown",ev=>{
   const fg=ev.target.closest(".swipe-fg");
   if(swOpen&&!ev.target.closest(".swipe-del")&&(!fg||fg.parentElement!==swOpen))closeSwipe();
   if(!fg||ev.button>0||ev.target.closest("input,textarea,select,.sugg"))return;
-  const row=fg.parentElement;sw={fg,row,x0:ev.clientX,y0:ev.clientY,t0:Date.now(),dir:null,base:row.classList.contains("open")?-96:0,x:null,id:ev.pointerId};
+  const row=fg.parentElement;sw={fg,row,del:row.querySelector(":scope>.swipe-del"),w:row.offsetWidth,x0:ev.clientX,y0:ev.clientY,t0:Date.now(),dir:null,base:row.classList.contains("open")?-96:0,x:null,armed:false,id:ev.pointerId};
 },{passive:true});
 document.addEventListener("pointermove",ev=>{
   if(!sw||ev.pointerId!==sw.id)return;const dx=ev.clientX-sw.x0,dy=ev.clientY-sw.y0;
   if(!sw.dir){if(Math.abs(dx)<8&&Math.abs(dy)<8)return;sw.dir=Math.abs(dx)>Math.abs(dy)?"h":"v";if(sw.dir==="h"){sw.fg.style.transition="none";sw.row.classList.add("dragging")}}
-  /* past the button the row resists (rubber band) instead of hitting a wall */
-  if(sw.dir!=="h")return;const raw=Math.min(0,sw.base+dx);sw.x=raw<-96?-96+(raw+96)*.3:raw;sw.fg.style.transform=`translateX(${sw.x}px)`;
+  /* the red button stretches to fill what is uncovered; past half the row it is "armed": releasing asks to delete */
+  if(sw.dir!=="h")return;sw.x=clamp(sw.base+dx,-sw.w,0);sw.fg.style.transform=`translateX(${sw.x}px)`;
+  if(sw.del)sw.del.style.width=Math.max(96,-sw.x)+"px";const armed=sw.x<=-sw.w*.5;if(armed!==sw.armed){sw.armed=armed;sw.row.classList.toggle("armed",armed)}
 },{passive:true});
 /* open if pulled past half the button, or flicked: a quick swipe is enough (speed in px/ms, at least 20 px) */
-function endSwipe(){if(!sw)return;sw.row.classList.remove("dragging");if(sw.dir==="h"){const x=sw.x??sw.base,dx=x-sw.base,v=dx/Math.max(1,Date.now()-sw.t0);
+/* full swipe released: the row slides out, then the usual confirmation; Cancel brings the row back */
+function unfull(row){row.classList.remove("full","armed");settle(row)}
+function endSwipe(){if(!sw)return;sw.row.classList.remove("dragging");if(sw.del)sw.del.style.width="";
+  if(sw.dir==="h"&&sw.armed){const row=sw.row;sw.fg.style.transition="";sw.fg.style.transform="";row.classList.remove("open");if(swOpen===row)swOpen=null;row.classList.add("full");swSuppress=Date.now();sw=null;
+    askDelete(row.dataset.kind,row.dataset.id,()=>unfull(row));if($("#modal").hidden&&row.classList.contains("full"))unfull(row);return}
+  if(sw.dir==="h"){const x=sw.x??sw.base,dx=x-sw.base,v=dx/Math.max(1,Date.now()-sw.t0);
   const open=Math.abs(dx)>=20&&Math.abs(v)>.11?v<0:x<-48;if(!open)settle(sw.row);sw.fg.style.transition="";sw.fg.style.transform="";sw.row.classList.toggle("open",open);
   if(open){if(swOpen&&swOpen!==sw.row)swOpen.classList.remove("open");swOpen=sw.row}else if(swOpen===sw.row)swOpen=null;swSuppress=Date.now()}sw=null}
 document.addEventListener("pointerup",endSwipe);document.addEventListener("pointercancel",endSwipe);
@@ -1250,21 +1266,22 @@ document.addEventListener("click",ev=>{
   if(Date.now()-swSuppress<350&&!ev.target.closest(".swipe-del")){ev.preventDefault();ev.stopPropagation();return}
   const fg=ev.target.closest(".swipe-fg");if(fg&&fg.parentElement.classList.contains("open")){ev.preventDefault();ev.stopPropagation();closeSwipe()}
 },true);
-function askDelete(kind,id){
+function askDelete(kind,id,onCancel){
+  const ask=(t,m,l,ok)=>confirmBox(t,m,l,ok,onCancel);
   const curR=S.routines.find(x=>x.id===ui.editRoutine);const curEx=exById(ui.editEx);
   if(kind==="routine"){const r=S.routines.find(x=>x.id===id);if(!r)return;
-    confirmBox(`Supprimer « ${rName(r.name)} » ?`,"Cette action est irréversible.","Supprimer",()=>{S.routines=S.routines.filter(x=>x.id!==id);save();render()})}
+    ask(`Supprimer « ${rName(r.name)} » ?`,"Cette action est irréversible.","Supprimer",()=>{S.routines=S.routines.filter(x=>x.id!==id);save();render()})}
   else if(kind==="item"&&curR){const it=curR.items.find(x=>x.id===id);const ex=it&&exById(it.ex);
-    confirmBox(ex?`Retirer « ${ex.name} » ?`:"Retirer cet exercice ?","Il sera retiré de cette routine. Cette action est irréversible.","Retirer",()=>{const i=curR.items.findIndex(x=>x.id===id);const nx=curR.items[i+1];if(nx&&nx.link&&!curR.items[i].link)nx.link=false;curR.items.splice(i,1);if(curR.items[0])curR.items[0].link=false;save();render()})}
+    ask(ex?`Retirer « ${ex.name} » ?`:"Retirer cet exercice ?","Il sera retiré de cette routine. Cette action est irréversible.","Retirer",()=>{const i=curR.items.findIndex(x=>x.id===id);const nx=curR.items[i+1];if(nx&&nx.link&&!curR.items[i].link)nx.link=false;curR.items.splice(i,1);if(curR.items[0])curR.items[0].link=false;save();render()})}
   else if(kind==="exercise"){const ex=exById(id);if(!ex)return;const used=routinesUsing(id);
-    if(used.length){closeSwipe();alertBox("Exercice utilisé","Il est dans : "+used.map(r=>rName(r.name)).join(", ")+". Retire-le de ces routines avant de le supprimer.");return}
-    confirmBox(`Supprimer « ${ex.name} » ?`,"Sa fiche sera supprimée. Ton historique de séances reste. Cette action est irréversible.","Supprimer",()=>{S.exercises=S.exercises.filter(e=>e.id!==id);save();render()})}
+    if(used.length){closeSwipe();onCancel&&onCancel();alertBox("Exercice utilisé","Il est dans : "+used.map(r=>rName(r.name)).join(", ")+". Retire-le de ces routines avant de le supprimer.");return}
+    ask(`Supprimer « ${ex.name} » ?`,"Sa fiche sera supprimée. Ton historique de séances reste. Cette action est irréversible.","Supprimer",()=>{S.exercises=S.exercises.filter(e=>e.id!==id);save();render()})}
   else if(kind==="session"){const s=S.sessions.find(x=>x.id===id);if(!s)return;
-    confirmBox("Supprimer cette séance ?",`${rName(s.routine)}, ${fmtDateShort(s.date)}. Cette action est irréversible.`,"Supprimer",()=>{S.sessions=S.sessions.filter(x=>x.id!==id);if(!S.sessions.some(x=>x.date===ui.calDay))ui.calDay=null;save();render()})}
+    ask("Supprimer cette séance ?",`${rName(s.routine)}, ${fmtDateShort(s.date)}. Cette action est irréversible.`,"Supprimer",()=>{S.sessions=S.sessions.filter(x=>x.id!==id);if(!S.sessions.some(x=>x.date===ui.calDay))ui.calDay=null;save();render()})}
   else if(kind==="sesex"){const[sid,k]=String(id).split("|");const s=S.sessions.find(x=>x.id===sid);const e=s&&s.exercises[+k];if(!e)return;
-    confirmBox(`Retirer « ${e.name} » de cette séance ?`,`${rName(s.routine)}, ${fmtDateShort(s.date)} : ${setsTxt(e)}. Cette action est irréversible.`,"Retirer",()=>{s.exercises.splice(+k,1);if(!s.exercises.length){S.sessions=S.sessions.filter(x=>x!==s);if(!S.sessions.some(x=>x.date===ui.calDay))ui.calDay=null}s.updatedAt=Date.now();save();render()})}
+    ask(`Retirer « ${e.name} » de cette séance ?`,`${rName(s.routine)}, ${fmtDateShort(s.date)} : ${setsTxt(e)}. Cette action est irréversible.`,"Retirer",()=>{s.exercises.splice(+k,1);if(!s.exercises.length){S.sessions=S.sessions.filter(x=>x!==s);if(!S.sessions.some(x=>x.date===ui.calDay))ui.calDay=null}s.updatedAt=Date.now();save();render()})}
   else if(kind==="step"&&curEx){const i=+id;
-    confirmBox("Supprimer cette étape ?",(curEx.steps[i]&&curEx.steps[i].n)||"Étape "+(i+1),"Supprimer",()=>{curEx.steps.splice(i,1);if(curEx.lvl>=curEx.steps.length)curEx.lvl=Math.max(0,curEx.steps.length-1);else if(i<curEx.lvl)curEx.lvl--;exChanged(curEx,true);render()})}
+    ask("Supprimer cette étape ?",(curEx.steps[i]&&curEx.steps[i].n)||"Étape "+(i+1),"Supprimer",()=>{curEx.steps.splice(i,1);if(curEx.lvl>=curEx.steps.length)curEx.lvl=Math.max(0,curEx.steps.length-1);else if(i<curEx.lvl)curEx.lvl--;exChanged(curEx,true);render()})}
 }
 
 /* ================= suggestions (exercise autocomplete) ================= */
@@ -1289,10 +1306,10 @@ function exChanged(ex,resetCount){if(resetCount)S.routines.forEach(r=>r.items.fo
 /* ================= events ================= */
 document.addEventListener("click",async ev=>{
   if(ev.target.id==="sheet"){closeSheet();return}
-  if(ev.target.id==="modal"){closeModal();return}
+  if(ev.target.id==="modal"){closeModal(true);return}
   const tb=ev.target.closest("[data-tab]");if(tb){go(tb.dataset.tab);return}
   const b=ev.target.closest("[data-act]");if(!b)return;const a=b.dataset.act;
-  if(a==="m-cancel"){closeModal();return}
+  if(a==="m-cancel"){closeModal(true);return}
   if(a==="m-ok"){const cb=modalCb;closeModal();cb&&cb();return}
   if(a==="swipe-del"){const row=b.closest(".swipe");askDelete(row.dataset.kind,row.dataset.id);return}
   if(a==="start")startSession(b.dataset.id);
@@ -1410,7 +1427,7 @@ document.addEventListener("change",ev=>{
 const typing=t=>t&&(t.tagName==="TEXTAREA"&&!t.readOnly||t.tagName==="INPUT"&&!/^(checkbox|radio|file|button|submit|range)$/.test(t.type));
 document.addEventListener("focusin",ev=>{if(typing(ev.target))document.body.classList.add("kb")});
 document.addEventListener("focusout",ev=>{if(typing(ev.target))setTimeout(()=>{if(!typing(document.activeElement))document.body.classList.remove("kb")},0)});
-document.addEventListener("keydown",ev=>{if(ev.key==="Escape"){if(!$("#modal").hidden)closeModal();else if(!$("#sheet").hidden)closeSheet()}});
+document.addEventListener("keydown",ev=>{if(ev.key==="Escape"){if(!$("#modal").hidden)closeModal(true);else if(!$("#sheet").hidden)closeSheet()}});
 document.addEventListener("focusout",ev=>{const t=ev.target;if(t.dataset&&t.dataset.sugg){setTimeout(()=>{const box=t.dataset.sugg==="live"?$("#sugg-live"):$("#sugg-"+t.dataset.item);if(box&&!box.contains(document.activeElement))box.hidden=true},200)}});
 window.addEventListener("hashchange",()=>{const h=location.hash.slice(1);if(TABS.some(t=>t[0]===h)&&h!==ui.tab){ui.tab=h;ui.editRoutine=null;ui.editEx=null;render()}});
 
