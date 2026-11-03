@@ -36,7 +36,7 @@ Enregistrer · Routines · Exercices · Progrès · Historique
 
 ## Modèle
 
-- **Bibliothèque d'exercices** : mesure en reps / secondes / tentatives ; option avec charge ; option unilatéral ; progression aucune / signal / charge / durée / étapes ; fiche « Comment faire ».
+- **Bibliothèque d'exercices** : mesure en reps / secondes / tentatives ; option avec charge ; option unilatéral ; option « sollicite les poignets » (`wrist`) ; progression aucune / signal / charge / durée / étapes ; fiche « Comment faire ».
 - **Routines** : séries, objectif min–max, repos réglé via une roue min/s, enchaîner, level up auto, note.
 
 ### Level up / régression
@@ -53,7 +53,7 @@ Enregistrer · Routines · Exercices · Progrès · Historique
 
 ## Garde-fou poignets
 
-Avant une séance contenant des kick-ups / handstand, l'app demande l'état des poignets. Si la gêne est > 3/10, les kick-ups sont retirés de la séance.
+Avant une séance contenant des kick-ups ou un exercice marqué « Sollicite les poignets » (champ `wrist`, coché d'office quand le nom contient « handstand », y compris par migration des anciennes données), l'app demande l'état des poignets. Si la gêne est > 3/10, les kick-ups sont retirés de la séance.
 
 ## Règles pour toute modification
 
