@@ -51,6 +51,7 @@ Enregistrer · Routines · Exercices · Progrès · Historique
 - Accent bleu cobalt (`#2457F5`).
 - Mode sombre : fond noir.
 - Suppression : glisser vers la gauche puis toucher « Supprimer », ou glisser jusqu'au bout (au-delà de la moitié de la ligne) ; dans les deux cas, confirmation (bouton « Supprimer » rouge / « Annuler » qui remet la ligne en place).
+- Animations : uniquement `transform` et `opacity`, interruptibles, sans bibliothèque ; `render()` réécrit `#main`, donc toute animation de contenu est lancée par l'action (WAAPI `el.animate()`), jamais par le rendu. `prefers-reduced-motion` : plus de déplacement, les fondus restent (variable JS `RM`).
 
 ## Garde-fou poignets
 
