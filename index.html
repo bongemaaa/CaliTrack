@@ -21,6 +21,10 @@
   --accent:#2457F5; --accent-ink:#FFFFFF; --accent-text:#1E4AD9; --accent-soft:#E7EDFF;
   --good:#18924D; --good-soft:#DCF2E5; --bad:#D9363A; --bad-soft:#FCE4E4;
   --bar:rgba(249,249,251,.86); --scrim:rgba(0,0,0,.35);
+  /* elevation: floating bars (rest timer, toast), sheets, alerts; --press = row highlight on any surface */
+  --float:#1C1C1E; --float-ink:#F5F5F7; --float-shadow:0 10px 30px rgba(0,0,0,.22);
+  --sheet:var(--bg); --sheet-card:var(--card); --alert:var(--card); --press:rgba(120,120,128,.16);
+  --ease-out:cubic-bezier(.23,1,.32,1); --ease-drawer:cubic-bezier(.32,.72,0,1);
   --f-display:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Helvetica Neue","Segoe UI",Roboto,Arial,sans-serif;
   --f-body:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue","Segoe UI",Roboto,Arial,sans-serif;
   --r:14px;
@@ -29,12 +33,16 @@
   --bg:#000000; --card:#1C1C1E; --ink:#F5F5F7; --muted:#9A9AA3; --line:#38383D; --track:#2C2C2E;
   --accent:#4C7BFF; --accent-ink:#FFFFFF; --accent-text:#7FA0FF; --accent-soft:#18233F;
   --good:#3DD27A; --good-soft:#12301D; --bad:#FF5F63; --bad-soft:#3A1618;
-  --bar:rgba(22,22,24,.86); --scrim:rgba(0,0,0,.6); color-scheme:dark}}
+  --bar:rgba(22,22,24,.86); --scrim:rgba(0,0,0,.6);
+  --float:#2C2C2E; --float-ink:#F5F5F7; --float-shadow:0 0 0 .5px rgba(255,255,255,.1),0 10px 30px rgba(0,0,0,.5);
+  --sheet:#1C1C1E; --sheet-card:#2C2C2E; --alert:#2C2C2E; --press:rgba(120,120,128,.28); color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#000000; --card:#1C1C1E; --ink:#F5F5F7; --muted:#9A9AA3; --line:#38383D; --track:#2C2C2E;
   --accent:#4C7BFF; --accent-ink:#FFFFFF; --accent-text:#7FA0FF; --accent-soft:#18233F;
   --good:#3DD27A; --good-soft:#12301D; --bad:#FF5F63; --bad-soft:#3A1618;
-  --bar:rgba(22,22,24,.86); --scrim:rgba(0,0,0,.6); color-scheme:dark}
+  --bar:rgba(22,22,24,.86); --scrim:rgba(0,0,0,.6);
+  --float:#2C2C2E; --float-ink:#F5F5F7; --float-shadow:0 0 0 .5px rgba(255,255,255,.1),0 10px 30px rgba(0,0,0,.5);
+  --sheet:#1C1C1E; --sheet-card:#2C2C2E; --alert:#2C2C2E; --press:rgba(120,120,128,.28); color-scheme:dark}
 
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -51,6 +59,10 @@ button{cursor:pointer}
 /* controls: a long press must not select their label or open the callout (content text stays selectable) */
 button,.tab,.chip,.pcol div,.swipe-del{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+/* text fields: a thin inner ring like iOS, not the thick offset web outline (a tapped field always matches :focus-visible) */
+.inp:focus-visible,.search:focus-visible,select.pick:focus-visible,textarea.dump:focus-visible{outline:none;box-shadow:inset 0 0 0 2px var(--accent)}
+.step input:focus-visible{outline:none}
+.step:focus-within{box-shadow:inset 0 0 0 2px var(--accent)}
 .num{font-variant-numeric:tabular-nums}
 
 .app{max-width:560px;margin:0 auto;padding-block:4px 210px}
@@ -62,7 +74,10 @@ button,.tab,.chip,.pcol div,.swipe-del{-webkit-user-select:none;user-select:none
 h1{font-family:var(--f-display);font-weight:700;font-size:34px;line-height:1.1;letter-spacing:-.025em;margin:6px 0 16px;text-wrap:balance;overflow-wrap:anywhere}
 h2{font-family:var(--f-display);font-weight:700;font-size:22px;line-height:1.15;letter-spacing:-.02em;margin:28px 0 10px;text-wrap:balance}
 h3{font-family:var(--f-display);font-weight:600;font-size:17px;line-height:1.25;margin:0;min-width:0;overflow-wrap:anywhere}
-.eyebrow{font-size:13px;font-weight:500;letter-spacing:.01em;text-transform:uppercase;color:var(--muted);padding-left:4px}
+.eyebrow{font-size:13px;font-weight:500;letter-spacing:.01em;text-transform:uppercase;color:var(--muted)}
+.eyebrow.sec{padding-left:16px}
+/* group footer (hints under a list): aligned with the text inside the cards */
+.foot{font-size:13px;color:var(--muted);margin:-4px 0 0;padding:0 16px}
 .muted{color:var(--muted)}
 .stack{display:flex;flex-direction:column;gap:12px}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
@@ -83,7 +98,11 @@ h3{font-family:var(--f-display);font-weight:600;font-size:17px;line-height:1.25;
 .btn.danger{color:var(--bad);background:var(--bad-soft)}
 .btn.danger.armed{background:var(--bad);color:#fff}
 .btn.small{min-height:38px;padding:0 12px;font-size:15px;border-radius:10px}
-.btn:active{opacity:.75}
+/* iOS: highlight at once on press, fade back on release; full-width CTAs also sink a little */
+.btn{transition:opacity 200ms ease-out,transform 160ms var(--ease-out)}
+.btn:active{opacity:.7;transition-duration:0ms}
+.btn.block:active{transform:scale(.98)}
+.btn.quiet{background:transparent;color:var(--bad);margin-top:8px}
 .btn:disabled{opacity:.4}
 .link{background:none;border:0;padding:6px 0;color:var(--accent-text);font-weight:600;font-size:15px}
 
@@ -124,13 +143,21 @@ h3{font-family:var(--f-display);font-weight:600;font-size:17px;line-height:1.25;
 .set.uni{grid-template-areas:"n g d ok" "n k k ok";grid-template-rows:50px 50px}
 .set.uni .n{grid-area:n}.set.uni .sg{grid-area:g}.set.uni .sd{grid-area:d}.set.uni .sk{grid-area:k}.set.uni .done{grid-area:ok;height:100%}
 .set .n{font-weight:600;font-size:15px;color:var(--muted);text-align:center;font-variant-numeric:tabular-nums}
-.step{display:grid;grid-template-columns:30px minmax(0,1fr) 30px;border-radius:10px;overflow:hidden;background:var(--track);height:50px;min-width:0}
+.step{display:grid;grid-template-columns:30px minmax(0,1fr) 30px;border-radius:10px;overflow:hidden;background:var(--track);height:50px;min-width:0;transition:background-color 200ms ease-out}
+/* −/+ targets: full 44 px when the stepper is alone on its row; 36 px on wide phones; 30 px kept only where two steppers share a row on a 375–413 pt screen (a value like 102,5 must still fit) */
+.set.c3 .step{grid-template-columns:44px minmax(0,1fr) 44px}
+@media (min-width:414px){.set:not(.c3) .step{grid-template-columns:36px minmax(0,1fr) 36px}}
 .step button{border:0;background:transparent;font-size:22px;font-weight:500;line-height:1;padding:0;color:var(--accent-text)}
 .step button:active{background:var(--line)}
 .step .v{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0}
 .step input{width:100%;border:0;background:transparent;text-align:center;font-weight:700;font-size:clamp(16px,4.8vw,20px);padding:0;font-variant-numeric:tabular-nums;letter-spacing:-.02em;min-width:0}
 .step small{font-size:10px;color:var(--muted);line-height:1;margin-top:1px;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;font-weight:500}
-.done{height:50px;border-radius:10px;border:0;background:var(--track);color:var(--muted);display:grid;place-items:center}
+.done{height:50px;border-radius:10px;border:0;background:var(--track);color:var(--muted);display:grid;place-items:center;
+  transition:background-color 160ms ease-out,color 160ms ease-out,transform 160ms var(--ease-out)}
+.done:active{transform:scale(.94)}
+/* the check draws itself when a set is validated (class added by the tap only, so a re-render does not replay it) */
+.done.pop path{stroke-dasharray:24;animation:tick 240ms var(--ease-out)}
+@keyframes tick{from{stroke-dashoffset:24}to{stroke-dashoffset:0}}
 .done svg{width:24px;height:24px}
 .set.ok .done{background:var(--accent);color:var(--accent-ink)}
 .set.ok .step{background:var(--accent-soft)}
@@ -153,7 +180,7 @@ h3{font-family:var(--f-display);font-weight:600;font-size:17px;line-height:1.25;
 /* Rest timer */
 .timer{position:fixed;left:0;right:0;z-index:19;bottom:calc(58px + env(safe-area-inset-bottom,0px));
   padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px))}
-.timer .in{max-width:560px;margin:0 auto 8px;background:var(--ink);color:var(--bg);border-radius:18px;padding:10px 10px 10px 16px;box-shadow:0 10px 30px rgba(0,0,0,.22)}
+.timer .in{max-width:560px;margin:0 auto 8px;background:var(--float);color:var(--float-ink);border-radius:18px;padding:10px 10px 10px 16px;box-shadow:var(--float-shadow)}
 .timer .next{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;padding:0 4px 8px 0;margin-bottom:8px;border-bottom:.5px solid rgba(127,127,127,.4)}
 .timer .next .tempo{background:rgba(127,127,127,.25);color:inherit;flex:none}
 .timer .next .tempo span{color:inherit;opacity:.75}
@@ -167,17 +194,26 @@ h3{font-family:var(--f-display);font-weight:600;font-size:17px;line-height:1.25;
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.02)}}
 .timer.chain .in{background:var(--card);color:var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.18)}
 .timer .bar{height:4px;border-radius:2px;background:rgba(127,127,127,.3);margin-top:7px;overflow:hidden}
-.timer .bar i{display:block;height:100%;background:var(--accent)}
+.timer .bar i{display:block;height:100%;width:100%;background:var(--accent);transform-origin:left;transform:scaleX(0);transition:transform 250ms linear}
 .timer.over .bar i{background:var(--accent-ink)}
 
 .exname{background:none;border:0;padding:0;margin:0;font:inherit;color:inherit;text-align:left;cursor:pointer}
-.exname::after{content:"›";margin-left:6px;color:var(--muted);font-weight:500}
+.exname::after{content:"";display:inline-block;width:7px;height:12px;margin-left:7px;vertical-align:-1px;background:var(--muted);opacity:.7;
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 13' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1.5 1.5l5 5-5 5'/%3E%3C/svg%3E") center/contain no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 13' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1.5 1.5l5 5-5 5'/%3E%3C/svg%3E") center/contain no-repeat}
 .lvlnav{display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap}
 .lvlnav .lv{font-size:13px;font-weight:600;flex:1 1 100%;color:var(--muted)}
 .lvlnav .btn{flex:1}
 .sheet{position:fixed;inset:0;z-index:40;background:var(--scrim);display:flex;align-items:flex-end;justify-content:center}
 .sheet[hidden]{display:none}
-.sheet .in{background:var(--bg);border-radius:16px 16px 0 0;width:100%;max-width:560px;max-height:80vh;overflow:auto;overscroll-behavior:contain;
+/* sheet rises from the bottom (iOS drawer curve), leaves faster; .closing is set by hideEl() before hidden */
+.sheet{transition:opacity 300ms ease}
+.sheet .in{transition:transform 400ms var(--ease-drawer)}
+.sheet.closing{opacity:0;pointer-events:none;transition-duration:220ms}
+.sheet.closing .in{transform:translateY(100%);transition-duration:240ms}
+.sheet .card{background:var(--sheet-card)}
+@starting-style{.sheet{opacity:0}.sheet .in{transform:translateY(100%)}}
+.sheet .in{background:var(--sheet);border-radius:16px 16px 0 0;width:100%;max-width:560px;max-height:80vh;overflow:auto;overscroll-behavior:contain;
   padding-top:8px;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .sheet .in::before{content:"";display:block;width:36px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 12px}
 .hrow{padding:11px 0;border-top:.5px solid var(--line);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;font-size:15px}
@@ -251,10 +287,23 @@ select.pick{width:100%;min-height:48px;border:0;border-radius:12px;background:va
 .checks{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:4px 16px}
 .check{display:flex;align-items:center;gap:8px;min-height:40px;font-size:15px;font-weight:500}
 .check input{width:20px;height:20px;accent-color:var(--accent)}
-.toast{position:fixed;left:50%;transform:translateX(-50%);top:calc(10px + env(safe-area-inset-top,0px));z-index:30;background:var(--ink);color:var(--bg);padding:11px 16px;border-radius:14px;font-weight:600;font-size:15px;max-width:calc(100% - 32px);box-shadow:0 10px 30px rgba(0,0,0,.22)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);top:calc(10px + env(safe-area-inset-top,0px));z-index:30;background:var(--float);color:var(--float-ink);padding:11px 16px;border-radius:14px;font-weight:600;font-size:15px;max-width:calc(100% - 32px);box-shadow:var(--float-shadow);
+  transition:transform 300ms var(--ease-out),opacity 300ms ease-out}
+.toast.closing{opacity:0;transform:translate(-50%,-8px);transition-duration:180ms}
+@starting-style{.toast{opacity:0;transform:translate(-50%,-12px)}}
 textarea.dump{width:100%;min-height:140px;border:0;border-radius:10px;background:var(--track);padding:10px;font-family:ui-monospace,Menlo,monospace;font-size:16px}
 .empty{padding:22px 14px;text-align:center;color:var(--muted)}
-@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+/* reduced motion = no movement, but fades and colour changes stay (they are feedback, not motion) */
+@media (prefers-reduced-motion: reduce){
+  .btn.block:active,.done:active,.card.tap:active{transform:none}
+  .done.pop path{animation:none}
+  .swipe-fg{transition:none}
+  .sheet.closing .in,.modal.closing .box{transform:none}
+  .toast.closing{transform:translateX(-50%)}
+  @starting-style{.sheet .in{transform:none}.modal .box{transform:none}.toast{transform:translateX(-50%)}}
+  .timer.over .in{animation:pulseFade 1.6s ease-in-out infinite}
+}
+@keyframes pulseFade{0%,100%{opacity:1}50%{opacity:.82}}
 
 /* ---- v6 additions ---- */
 .set.c3{grid-template-columns:20px minmax(0,1fr) 50px}
@@ -266,19 +315,32 @@ textarea.dump{width:100%;min-height:140px;border:0;border-radius:10px;background
 .swipe{position:relative;border-radius:var(--r);overflow:hidden}
 .swipe-del{position:absolute;right:0;top:0;bottom:0;width:96px;border:0;background:var(--bad);color:#fff;font-weight:600;font-size:15px;border-radius:0 var(--r) var(--r) 0;visibility:hidden}
 .swipe.open>.swipe-del,.swipe.dragging>.swipe-del{visibility:visible}
-.swipe-fg{position:relative;z-index:1;background:var(--card);border-radius:var(--r);transition:transform .22s ease;touch-action:pan-y;will-change:transform}
+.swipe-fg{position:relative;z-index:1;background:var(--card);border-radius:var(--r);transition:transform 300ms var(--ease-drawer);touch-action:pan-y;will-change:transform}
+/* the red button stays visible while the row slides back, and fills the gap when the row is pulled past it */
+.swipe.settling>.swipe-del{visibility:visible}
+.swipe.dragging,.swipe.open,.swipe.settling{background:var(--bad)}
+.swipe.dragging .lrow:active{background:transparent}
 .swipe.open>.swipe-fg{transform:translateX(-96px);border-radius:var(--r) 0 0 var(--r)}
 .lrow{display:flex;align-items:center;gap:12px;padding:13px 16px;width:100%;text-align:left;background:none;border:0;min-height:60px}
 .lrow .t{flex:1;min-width:0}
 .lrow .t b{display:block;font-weight:600;font-size:17px;overflow-wrap:anywhere}
 .lrow .sub{font-size:13px;color:var(--muted);margin-top:2px}
-.lrow .chev{color:var(--muted);font-size:20px}
+.lrow .chev{width:8px;height:13px;flex:none;color:var(--muted);opacity:.6}
+/* iOS inset grouped list: one rounded block, hairline separators inset to the text */
+.group{background:var(--card);border-radius:var(--r);overflow:hidden}
+.group>.swipe,.group>.swipe>.swipe-fg,.group>.swipe.open>.swipe-fg,.group>.swipe>.swipe-del{border-radius:0}
+.group>.swipe+.swipe>.swipe-fg::before{content:"";position:absolute;left:16px;right:0;top:0;height:.5px;background:var(--line);z-index:1}
 .badge{display:inline-block;font-size:11px;font-weight:600;border-radius:5px;padding:1px 6px;background:var(--accent-soft);color:var(--accent-text);margin-left:6px;vertical-align:2px}
 
 /* alert dialog */
 .modal{position:fixed;inset:0;z-index:50;background:var(--scrim);display:flex;align-items:center;justify-content:center;padding:24px}
 .modal[hidden]{display:none}
-.modal .box{background:var(--card);border-radius:16px;width:100%;max-width:290px;text-align:center;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.3)}
+/* alert: arrives slightly larger and settles (centred, not anchored to a trigger), fades out */
+.modal{transition:opacity 200ms ease-out}
+.modal .box{transition:transform 200ms var(--ease-out)}
+.modal.closing{opacity:0;pointer-events:none;transition-duration:150ms}
+@starting-style{.modal{opacity:0}.modal .box{transform:scale(1.08)}}
+.modal .box{background:var(--alert);border-radius:16px;width:100%;max-width:290px;text-align:center;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.3)}
 .modal h3{padding:18px 16px 4px;font-size:17px;font-weight:600}
 .modal p{margin:0;padding:2px 16px 16px;font-size:13px;color:var(--muted)}
 .mbtns{display:grid;grid-template-columns:1fr 1fr;border-top:.5px solid var(--line)}
@@ -345,7 +407,14 @@ textarea.inp{min-height:110px;padding:10px 12px;line-height:1.4;resize:vertical}
   .set:not(.c3):not(.uni)>.step,.set.uni.nokg>.step{grid-column:2}
   .set:not(.c3):not(.uni)>.done,.set.uni.nokg>.done{grid-column:3;grid-row:1/span 2;height:100%}
   .set.uni:not(.nokg){grid-template-columns:20px minmax(0,1fr) 50px;grid-template-areas:"n g ok" "n d ok" "n k ok";grid-template-rows:50px 50px 50px}
+  .set .step{grid-template-columns:44px minmax(0,1fr) 44px}
 }
+/* press feedback: rows highlight, controls dim (instant on press, fade on release) */
+.lrow,.sugg button,.mbtns button{transition:background-color 200ms ease-out}
+.lrow:active,.sugg button:active,.mbtns button:active{background:var(--press);transition-duration:0ms}
+.iconbtn,.timer button,.mstep button,.scale button,.day,.tab,.seg button,.restbtn,.lvl .undo,.exname,.link{transition:opacity 200ms ease-out}
+.iconbtn:active,.timer button:active,.mstep button:active,.scale button:active,.day:active,.tab:active,.seg button:active,.restbtn:active,.lvl .undo:active,.exname:active{opacity:.6;transition-duration:0ms}
+.link:active{opacity:.5;transition-duration:0ms}
 /* keyboard open: the fixed tab bar and rest timer would cover the field being typed in (the timer keeps running) */
 body.kb .tabbar,body.kb .timer{display:none}
 </style>
@@ -365,7 +434,7 @@ body.kb .tabbar,body.kb .timer{display:none}
     <div class="next" id="timerNext"></div>
     <div class="mainrow">
       <div class="t"><span class="lbl" id="timerLbl">Repos</span><span id="timerVal">0:00</span>
-        <div class="bar" id="timerBarWrap"><i id="timerBar" style="width:0"></i></div></div>
+        <div class="bar" id="timerBarWrap"><i id="timerBar"></i></div></div>
       <button id="tMinus" aria-label="Retirer 15 secondes">−15</button>
       <button id="tPlus" aria-label="Ajouter 15 secondes">+15</button>
       <button id="tStop" aria-label="Arrêter le minuteur">✕</button>
@@ -407,8 +476,11 @@ const DAYS=["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"];
 const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v);return true}catch(e){return false}};
 const lsDel=k=>{try{localStorage.removeItem(k)}catch(e){}};
+/* show / hide an overlay with its CSS exit transition: .closing plays the exit, then hidden; showing again cancels a pending hide */
+function showEl(el){clearTimeout(el._hideT);el.classList.remove("closing");el.hidden=false}
+function hideEl(el,ms){if(el.hidden)return;clearTimeout(el._hideT);el.classList.add("closing");el._hideT=setTimeout(()=>{el.hidden=true;el.classList.remove("closing")},ms)}
 let toastT;
-function toast(msg){const t=$("#toast");t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2400)}
+function toast(msg){const t=$("#toast");t.textContent=msg;showEl(t);clearTimeout(toastT);toastT=setTimeout(()=>hideEl(t,200),2400)}
 const fmtDateShort=s=>{const d=parseISO(s);return d.getDate()+" "+MSHORT[d.getMonth()]+(d.getFullYear()!==new Date().getFullYear()?" "+d.getFullYear():"")};
 /* number shown in a text field with the French decimal comma */
 const dec=v=>String(v??"").replace(".",",");
@@ -611,6 +683,7 @@ const I={
  moon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>',
  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'
 };
+const CHEV='<svg class="chev" viewBox="0 0 8 13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 1.5l5 5-5 5"/></svg>';
 const TABS=[["enregistrer","Enregistrer",I.rec],["routines","Routines",I.list],["exercices","Exercices",I.book],["progres","Progrès",I.prog],["historique","Historique",I.cal]];
 
 /* ================= theme ================= */
@@ -660,7 +733,7 @@ function vRecord(){
       ${ups||downs?`<div class="row" style="margin-top:8px;gap:6px">${ups?`<span class="streak up">↑ ${ups} level up</span>`:""}${downs?`<span class="streak down">↓ ${downs} régression${downs>1?"s":""}</span>`:""}</div>`:""}
       <div class="chips">${chips||'<span class="muted">Aucun exercice</span>'}</div></button>`}).join("");
   return `<h1>Enregistrer</h1><div class="stack">${vBilan()}
-    <div class="eyebrow">Choisis une routine</div>
+    <div class="eyebrow sec">Choisis une routine</div>
     ${cards||'<div class="card empty">Aucune routine. Crée-en une dans l\'onglet Routines.</div>'}
     <button class="btn block" data-act="start-free">+ Séance libre</button></div>`;
 }
@@ -694,7 +767,7 @@ function vWrist(){
     <p class="muted" style="margin:0;font-size:14px">Douleur aux poignets maintenant, de 0 à 10. Au-dessus de 3, les kick-ups sont retirés aujourd'hui et le handstand reste au mur.</p>
     <label class="check"><input type="checkbox" id="wristBack"> La douleur est revenue le lendemain de la dernière séance</label>
     <div class="scale">${Array.from({length:11},(_,v)=>`<button data-act="wrist" data-v="${v}" class="${v>3?"hi":""}" aria-label="Douleur ${v} sur 10">${v}</button>`).join("")}</div></div>
-    <button class="btn danger block" data-act="cancel">Abandonner la séance</button></div>`;
+    <button class="btn quiet block" data-act="cancel">Abandonner la séance</button></div>`;
 }
 function stepper(ei,si,field,val,label){
   return `<div class="step"><button data-act="dec" data-f="${field}" aria-label="Moins">−</button>
@@ -758,7 +831,7 @@ function vLive(){
       <label class="check" style="margin-top:4px"><input type="checkbox" id="liveLink" ${d.exercises.length?"":"disabled"}> Enchaîner avec le précédent</label></div>
     <p id="finishMsg" class="muted" hidden></p>
     <button class="btn primary block" data-act="finish" style="min-height:56px">Terminer la séance</button>
-    <button class="btn danger block" data-act="cancel">Abandonner la séance</button></div>`;
+    <button class="btn quiet block" data-act="cancel">Abandonner la séance</button></div>`;
 }
 function finishSession(){
   const exs=draft.exercises.map(e=>({name:e.name,ex:e.ex,mode:e.mode,rx:e.item||undefined,uni:!!e.uni,load:!!e.load,tempo:e.tempo||"",
@@ -823,7 +896,7 @@ function showTimer(){
   const left=(T.end-Date.now())/1000;
   $("#timerLbl").textContent=left>0?("Repos · "+T.label):"Repos terminé · c'est reparti";
   $("#timerVal").textContent=left>0?mmss(Math.ceil(left)):"+"+mmss(-left);
-  $("#timerBar").style.width=Math.max(0,Math.min(100,100*(1-left/T.total)))+"%";
+  $("#timerBar").style.transform="scaleX("+Math.max(0,Math.min(1,1-left/T.total)).toFixed(4)+")";
   if(left<=0&&!overShown){overShown=true;el.classList.add("over");try{navigator.vibrate&&navigator.vibrate([250,120,250])}catch(e){}if(document.hidden)beepPending=true;else beep()}
   if(left>0)el.classList.remove("over");if(left<-60)stopTimer();
 }
@@ -846,9 +919,9 @@ document.addEventListener("visibilitychange",()=>{if(document.visibilityState!==
 function vRoutines(){
   if(ui.editRoutine){const r=S.routines.find(x=>x.id===ui.editRoutine);if(r)return vRoutineEdit(r);ui.editRoutine=null}
   const list=S.routines.map(r=>{const nG=blocks(r.items).filter(b=>b.length>1).length;
-    return swipeRow("routine",r.id,`<button class="lrow" data-act="edit-r" data-id="${r.id}"><span class="t"><b>${esc(rName(r.name))}</b><span class="sub">${r.items.length} exercice${r.items.length>1?"s":""}${nG?` · ${nG} superset${nG>1?"s":""}`:""}</span></span><span class="chev">›</span></button>`)}).join("");
-  return `<h1>Routines</h1><div class="stack">${list||'<div class="card empty">Aucune routine pour l\'instant.</div>'}
-    <p class="muted" style="font-size:13px;margin:0;padding-left:4px">Glisse une routine vers la gauche pour la supprimer.</p>
+    return swipeRow("routine",r.id,`<button class="lrow" data-act="edit-r" data-id="${r.id}"><span class="t"><b>${esc(rName(r.name))}</b><span class="sub">${r.items.length} exercice${r.items.length>1?"s":""}${nG?` · ${nG} superset${nG>1?"s":""}`:""}</span></span>${CHEV}</button>`)}).join("");
+  return `<h1>Routines</h1><div class="stack">${list?`<div class="group">${list}</div>`:'<div class="card empty">Aucune routine pour l\'instant.</div>'}
+    <p class="foot">Glisse une routine vers la gauche pour la supprimer.</p>
     <button class="btn primary block" data-act="new-r">+ Nouvelle routine</button>
     <button class="btn ghost block" data-act="restore-r">Ajouter les routines du programme</button></div>`;
 }
@@ -884,7 +957,7 @@ function vRoutineEdit(r){
    <h1 style="margin-top:4px">${esc(r.name)||"Nouvelle routine"}</h1>
    <div class="stack"><div class="card"><div class="field"><label for="rname">Nom de la routine</label><input class="inp" id="rname" value="${esc(r.name)}" style="font-weight:600;font-size:17px"></div></div>
      ${r.items.map((it,i)=>itemEditor(r,it,i)).join("")}
-     <p class="muted" style="font-size:13px;margin:0;padding-left:4px">Glisse un exercice vers la gauche pour le retirer.</p>
+     <p class="foot">Glisse un exercice vers la gauche pour le retirer.</p>
      <button class="btn block" data-act="it-add">+ Ajouter un exercice</button>
      <button class="btn primary block" data-act="back-r">Terminé</button></div>`;
 }
@@ -894,14 +967,14 @@ function vExercises(){
   if(ui.editEx){const ex=exById(ui.editEx);if(ex)return vExSheet(ex);ui.editEx=null}
   return `<h1>Exercices</h1><div class="stack">
     <input class="search" id="exQ" type="search" placeholder="Rechercher" value="${esc(ui.exQuery)}" autocomplete="off" aria-label="Rechercher un exercice">
-    <div class="stack" id="exList">${exListHTML()}</div>
-    <p class="muted" style="font-size:13px;margin:0;padding-left:4px">Glisse un exercice vers la gauche pour le supprimer.</p>
+    <div class="group" id="exList">${exListHTML()}</div>
+    <p class="foot">Glisse un exercice vers la gauche pour le supprimer.</p>
     <button class="btn primary block" data-act="new-ex">+ Nouvel exercice</button></div>`;
 }
 function exListHTML(){
   const q=norm(ui.exQuery);
   const list=S.exercises.slice().sort((a,b)=>a.name.localeCompare(b.name,"fr")).filter(e=>!q||norm(e.name).includes(q)||e.steps.some(s=>norm(s.n).includes(q)));
-  return list.map(e=>swipeRow("exercise",e.id,`<button class="lrow" data-act="edit-ex" data-id="${e.id}"><span class="t"><b>${esc(e.name||"Sans nom")}${e.todo||!e.how?'<span class="badge">fiche à compléter</span>':""}</b><span class="sub">${esc(exSub(e))}</span></span><span class="chev">›</span></button>`)).join("")||'<div class="card empty">Aucun exercice trouvé.</div>';
+  return list.map(e=>swipeRow("exercise",e.id,`<button class="lrow" data-act="edit-ex" data-id="${e.id}"><span class="t"><b>${esc(e.name||"Sans nom")}${e.todo||!e.how?'<span class="badge">fiche à compléter</span>':""}</b><span class="sub">${esc(exSub(e))}</span></span>${CHEV}</button>`)).join("")||'<div class="card empty">Aucun exercice trouvé.</div>';
 }
 function vExSheet(ex){
   const used=routinesUsing(ex.id).map(r=>rName(r.name));
@@ -938,7 +1011,7 @@ function vExSheet(ex){
       <div class="field"><label for="xhow">Comment faire</label><textarea class="inp" id="xhow" data-xf="how" placeholder="Placement, points clés, erreurs à éviter…">${esc(ex.how||"")}</textarea></div>
       <div class="field"><label for="xlink">Lien vidéo (optionnel)</label><input class="inp" id="xlink" type="url" data-xf="link" value="${esc(ex.link||"")}" placeholder="https://…">${linkOk?`<a class="link" href="${esc(ex.link)}" target="_blank" rel="noopener">Ouvrir la vidéo ↗</a>`:""}</div>
     </div>
-    <p class="muted" style="font-size:13px;margin:0;padding-left:4px">${used.length?"Utilisé dans : "+esc(used.join(", ")):"Utilisé dans aucune routine."}</p>
+    <p class="foot">${used.length?"Utilisé dans : "+esc(used.join(", ")):"Utilisé dans aucune routine."}</p>
    </div>`;
 }
 
@@ -1052,7 +1125,7 @@ function vHistory(){
       return swipeRow("session",s.id,`<div style="padding:14px 16px"><div class="card-head"><h3>${esc(rName(s.routine))}</h3></div>
        <div class="muted" style="font-size:13px;margin:2px 0 8px">${dur?dur+" min · ":""}${pl(s.exercises.length,"exercice","exercices")} · ${pl(vol.n,"série","séries")} · ${nf2.format(vol.v/1000)} t${s.wrist!=null?" · poignets "+s.wrist+"/10":""}</div>
        <div class="sesex">${s.exercises.map((e,k)=>swipeRow("sesex",s.id+"|"+k,`<div class="detail-ex"><b>${esc(e.name)}${e.tempo?` <span class="muted" style="font-weight:500">· ${esc(e.tempo)}</span>`:""}</b><span class="muted">${e.sets.length} série${e.sets.length>1?"s":""}</span><span class="sets-txt">${esc(setsTxt(e))}</span></div>`)).join("")}</div></div>`)}).join("")
-      +`<p class="muted" style="font-size:13px;margin:0;padding-left:4px">Glisse une séance (par son titre) ou un exercice vers la gauche pour le supprimer.</p>`;
+      +`<p class="foot">Glisse une séance (par son titre) ou un exercice vers la gauche pour le supprimer.</p>`;
   }
   return `<h1>Historique</h1><div class="stack">
    <div class="tiles"><div class="card tile"><div class="v num">${week}</div><div class="l">séance${week>1?"s":""} cette semaine</div></div>
@@ -1060,7 +1133,7 @@ function vHistory(){
     <div class="card tile hot"><div class="v num">${streak}</div><div class="l">semaine${streak>1?"s":""} d'affilée</div></div></div>
    <div class="card"><div class="cal-nav"><button class="iconbtn" data-act="mprev" aria-label="Mois précédent">‹</button><h3>${MONTHS[mo]} ${y}</h3><button class="iconbtn" data-act="mnext" aria-label="Mois suivant">›</button></div>
     <div class="cal">${cells}</div></div>
-   ${detail||(S.sessions.length?`<p class="muted" style="margin:0;padding-left:4px;font-size:14px">Touche un jour marqué d'un point pour voir la séance.</p>`:"")}
+   ${detail||(S.sessions.length?`<p class="foot">Touche un jour marqué d'un point pour voir la séance.</p>`:"")}
    <h2>Mes données</h2>
    <div class="card stack">${backupDue()?`<div class="banner">${ui.lastExport?`Dernière sauvegarde le ${fmtDateShort(iso(new Date(ui.lastExport)))}.`:"Aucune sauvegarde pour l'instant."} Tes séances n'existent que sur ce téléphone : sauvegarde-les dans un fichier.</div>`:""}<p class="muted" style="margin:0;font-size:14px">Enregistré sur cet appareil. Exporte régulièrement un fichier de sauvegarde.</p>
     <button class="btn block" data-act="export">Sauvegarder dans un fichier</button><div id="dumpBox" hidden></div>
@@ -1119,7 +1192,7 @@ function openHist(name,exId){
     <p class="muted" style="font-size:13px;margin:4px 0 8px">${rows.length?`${rows.length} dernière${rows.length>1?"s":""} séance${rows.length>1?"s":""} · à droite : ${metricLabel(m).toLowerCase()}`:"Pas encore de séance avec cet exercice."}</p>
     ${rows.map(s=>{const e=s.exercises.find(x=>x.name===name);const v=exValue(e,m);const d=parseISO(s.date);
       return `<div class="hrow"><span class="d">${DAYS[d.getDay()].slice(0,3)}. ${fmtDateShort(s.date)}</span><span class="num" style="font-weight:700">${v==null?"–":fmt(v)+" "+unit(m)}</span><span class="s">${esc(setsTxt(e))}</span></div>`}).join("")}`;
-  $("#sheet").hidden=false;
+  showEl($("#sheet"));
 }
 /* while a sheet or an alert is open, the page behind must not scroll: dragging the scrim, or a sheet whose content
    fits (the rest wheel's sheet), would otherwise scroll the page. Only touches inside an element that can really
@@ -1127,22 +1200,22 @@ function openHist(name,exId){
    (Pinning the body with position:fixed froze the wheel on iOS, so this is done at the touch level instead.) */
 function blockBehind(ev){const sc=ev.target.closest&&ev.target.closest(".pcol,.sheet .in");if(sc&&sc.scrollHeight>sc.clientHeight+1)return;if(ev.cancelable)ev.preventDefault()}
 ["#sheet","#modal"].forEach(id=>$(id).addEventListener("touchmove",blockBehind,{passive:false}));
-function closeSheet(){$("#sheet").hidden=true;pickCb=null}
+function closeSheet(){hideEl($("#sheet"),260);pickCb=null}
 let modalCb=null;
 function confirmBox(title,msg,okLabel,onOk){$("#mTitle").textContent=title;$("#mMsg").textContent=msg;const b=$("#mBtns");b.className="mbtns";
-  b.innerHTML=`<button data-act="m-cancel">Annuler</button><button class="del" data-act="m-ok">${esc(okLabel||"Supprimer")}</button>`;modalCb=onOk;$("#modal").hidden=false}
+  b.innerHTML=`<button data-act="m-cancel">Annuler</button><button class="del" data-act="m-ok">${esc(okLabel||"Supprimer")}</button>`;modalCb=onOk;showEl($("#modal"))}
 /* non-destructive yes / no question (same alert, no red button) */
 function askBox(title,msg,yes,onYes){$("#mTitle").textContent=title;$("#mMsg").textContent=msg;const b=$("#mBtns");b.className="mbtns";
-  b.innerHTML=`<button data-act="m-cancel">Non</button><button data-act="m-ok" style="font-weight:600">${esc(yes)}</button>`;modalCb=onYes;$("#modal").hidden=false}
-function alertBox(title,msg){$("#mTitle").textContent=title;$("#mMsg").textContent=msg;const b=$("#mBtns");b.className="mbtns one";b.innerHTML=`<button data-act="m-cancel">OK</button>`;modalCb=null;$("#modal").hidden=false}
-function closeModal(){$("#modal").hidden=true;modalCb=null}
+  b.innerHTML=`<button data-act="m-cancel">Non</button><button data-act="m-ok" style="font-weight:600">${esc(yes)}</button>`;modalCb=onYes;showEl($("#modal"))}
+function alertBox(title,msg){$("#mTitle").textContent=title;$("#mMsg").textContent=msg;const b=$("#mBtns");b.className="mbtns one";b.innerHTML=`<button data-act="m-cancel">OK</button>`;modalCb=null;showEl($("#modal"))}
+function closeModal(){hideEl($("#modal"),170);modalCb=null}
 let pickCb=null;
 function openRestPicker(val,cb){
   val=Math.max(0,Math.min(659,val||0));const m=Math.floor(val/60),s=val%60;
   $("#sheetIn").innerHTML=`<div class="card-head"><h3>Repos</h3><button class="link" data-act="pick-ok">OK</button></div>
     <div class="pheads"><span>min</span><span>s</span></div>
     <div class="picker"><div class="band"></div><div class="pcol" id="pcM">${Array.from({length:11},(_,i)=>`<div data-i="${i}">${i}</div>`).join("")}</div><div class="pcol" id="pcS">${Array.from({length:60},(_,i)=>`<div data-i="${i}">${pad(i)}</div>`).join("")}</div></div>`;
-  $("#sheet").hidden=false;pickCb=cb;
+  showEl($("#sheet"));pickCb=cb;
   const cm=$("#pcM"),cs=$("#pcS");
   requestAnimationFrame(()=>{cm.scrollTop=m*44;cs.scrollTop=s*44;markPick()});
   [cm,cs].forEach(c=>{c.addEventListener("scroll",()=>requestAnimationFrame(markPick),{passive:true});
@@ -1153,19 +1226,24 @@ function pickValue(){const cm=$("#pcM"),cs=$("#pcS");return Math.round(cm.scroll
 
 /* ================= swipe to delete ================= */
 let sw=null,swOpen=null,swSuppress=0;
-function closeSwipe(){if(swOpen){swOpen.classList.remove("open");swOpen=null}}
+/* while a row slides back, its red button stays visible (no empty gap) */
+function settle(row){row.classList.add("settling");clearTimeout(row._setT);row._setT=setTimeout(()=>row.classList.remove("settling"),320)}
+function closeSwipe(){if(swOpen){swOpen.classList.remove("open");settle(swOpen);swOpen=null}}
 document.addEventListener("pointerdown",ev=>{
   const fg=ev.target.closest(".swipe-fg");
   if(swOpen&&!ev.target.closest(".swipe-del")&&(!fg||fg.parentElement!==swOpen))closeSwipe();
   if(!fg||ev.button>0||ev.target.closest("input,textarea,select,.sugg"))return;
-  const row=fg.parentElement;sw={fg,row,x0:ev.clientX,y0:ev.clientY,dir:null,base:row.classList.contains("open")?-96:0,x:null,id:ev.pointerId};
+  const row=fg.parentElement;sw={fg,row,x0:ev.clientX,y0:ev.clientY,t0:Date.now(),dir:null,base:row.classList.contains("open")?-96:0,x:null,id:ev.pointerId};
 },{passive:true});
 document.addEventListener("pointermove",ev=>{
   if(!sw||ev.pointerId!==sw.id)return;const dx=ev.clientX-sw.x0,dy=ev.clientY-sw.y0;
   if(!sw.dir){if(Math.abs(dx)<8&&Math.abs(dy)<8)return;sw.dir=Math.abs(dx)>Math.abs(dy)?"h":"v";if(sw.dir==="h"){sw.fg.style.transition="none";sw.row.classList.add("dragging")}}
-  if(sw.dir!=="h")return;sw.x=clamp(sw.base+dx,-130,0);sw.fg.style.transform=`translateX(${sw.x}px)`;
+  /* past the button the row resists (rubber band) instead of hitting a wall */
+  if(sw.dir!=="h")return;const raw=Math.min(0,sw.base+dx);sw.x=raw<-96?-96+(raw+96)*.3:raw;sw.fg.style.transform=`translateX(${sw.x}px)`;
 },{passive:true});
-function endSwipe(){if(!sw)return;sw.row.classList.remove("dragging");if(sw.dir==="h"){const open=(sw.x??sw.base)<-48;sw.fg.style.transition="";sw.fg.style.transform="";sw.row.classList.toggle("open",open);
+/* open if pulled past half the button, or flicked: a quick swipe is enough (speed in px/ms, at least 20 px) */
+function endSwipe(){if(!sw)return;sw.row.classList.remove("dragging");if(sw.dir==="h"){const x=sw.x??sw.base,dx=x-sw.base,v=dx/Math.max(1,Date.now()-sw.t0);
+  const open=Math.abs(dx)>=20&&Math.abs(v)>.11?v<0:x<-48;if(!open)settle(sw.row);sw.fg.style.transition="";sw.fg.style.transform="";sw.row.classList.toggle("open",open);
   if(open){if(swOpen&&swOpen!==sw.row)swOpen.classList.remove("open");swOpen=sw.row}else if(swOpen===sw.row)swOpen=null;swSuppress=Date.now()}sw=null}
 document.addEventListener("pointerup",endSwipe);document.addEventListener("pointercancel",endSwipe);
 document.addEventListener("click",ev=>{
@@ -1223,7 +1301,8 @@ document.addEventListener("click",async ev=>{
   else if(a==="inc"||a==="dec"){const row=b.closest(".set");const ei=+row.dataset.ei,si=+row.dataset.si,f=b.dataset.f;const s=draft.exercises[ei].sets[si];
     const v=Math.max(0,r2((+s[f]||0)+(a==="inc"?1:-1)*STEP[f]));s[f]=v;saveDraft();const inp=document.getElementById(`in-${ei}-${si}-${f}`);if(inp)inp.value=dec(v)}
   else if(a==="done"){const row=b.closest(".set");const ei=+row.dataset.ei,si=+row.dataset.si;const s=draft.exercises[ei].sets[si];
-    s.done=!s.done;saveDraft();row.classList.toggle("ok",s.done);b.setAttribute("aria-pressed",s.done);lastNextKey="";if(s.done)onSetDone(ei,si);
+    s.done=!s.done;saveDraft();row.classList.toggle("ok",s.done);b.setAttribute("aria-pressed",s.done);
+    b.classList.remove("pop");if(s.done){void b.offsetWidth;b.classList.add("pop")}lastNextKey="";if(s.done)onSetDone(ei,si);
     const c=draft.exercises.reduce((x,e)=>x+e.sets.filter(s=>s.done).length,0);const lab=document.getElementById("doneCount");if(lab)lab.textContent=`${c} série${c>1?"s":""} validée${c>1?"s":""}`}
   else if(a==="note")b.classList.toggle("clamp");
   else if(a==="hist")openHist(b.dataset.name,b.dataset.ex);
@@ -1334,6 +1413,9 @@ document.addEventListener("focusout",ev=>{if(typing(ev.target))setTimeout(()=>{i
 document.addEventListener("keydown",ev=>{if(ev.key==="Escape"){if(!$("#modal").hidden)closeModal();else if(!$("#sheet").hidden)closeSheet()}});
 document.addEventListener("focusout",ev=>{const t=ev.target;if(t.dataset&&t.dataset.sugg){setTimeout(()=>{const box=t.dataset.sugg==="live"?$("#sugg-live"):$("#sugg-"+t.dataset.item);if(box&&!box.contains(document.activeElement))box.hidden=true},200)}});
 window.addEventListener("hashchange",()=>{const h=location.hash.slice(1);if(TABS.some(t=>t[0]===h)&&h!==ui.tab){ui.tab=h;ui.editRoutine=null;ui.editEx=null;render()}});
+
+/* Safari iOS applies :active (press feedback) only when a touchstart listener exists */
+document.addEventListener("touchstart",()=>{},{passive:true});
 
 /* ================= boot ================= */
 (function(){const h=location.hash.slice(1);if(TABS.some(t=>t[0]===h))ui.tab=h})();
