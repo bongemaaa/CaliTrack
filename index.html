@@ -24,7 +24,7 @@
   /* elevation: floating bars (rest timer, toast), sheets, alerts; --press = row highlight on any surface */
   --float:#1C1C1E; --float-ink:#F5F5F7; --float-shadow:0 10px 30px rgba(0,0,0,.22);
   --sheet:var(--bg); --sheet-card:var(--card); --alert:var(--card); --press:rgba(120,120,128,.16);
-  --ease-out:cubic-bezier(.23,1,.32,1); --ease-drawer:cubic-bezier(.32,.72,0,1);
+  --ease-out:cubic-bezier(.23,1,.32,1); --ease-in-out:cubic-bezier(.77,0,.175,1); --ease-drawer:cubic-bezier(.32,.72,0,1);
   --f-display:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Helvetica Neue","Segoe UI",Roboto,Arial,sans-serif;
   --f-body:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue","Segoe UI",Roboto,Arial,sans-serif;
   --r:14px;
@@ -195,6 +195,11 @@ h3{font-family:var(--f-display);font-weight:600;font-size:17px;line-height:1.25;
 .timer button{min-width:48px;height:44px;border-radius:12px;border:0;background:rgba(127,127,127,.25);color:inherit;font-weight:600;font-size:15px}
 .timer.over .in{background:var(--accent);color:var(--accent-ink);animation:pulse 1s ease-in-out infinite}
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.02)}}
+/* rest timer rises just above the tab bar after a set, and leaves the same way */
+.timer .in{transition:transform 250ms var(--ease-out),opacity 200ms ease-out}
+@starting-style{.timer .in{transform:translateY(16px);opacity:0}}
+.timer.closing{pointer-events:none}
+.timer.closing .in{transform:translateY(16px);opacity:0;animation:none;transition-duration:180ms}
 .timer.chain .in{background:var(--card);color:var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.18)}
 .timer .bar{height:4px;border-radius:2px;background:rgba(127,127,127,.3);margin-top:7px;overflow:hidden}
 .timer .bar i{display:block;height:100%;width:100%;background:var(--accent);transform-origin:left;transform:scaleX(0);transition:transform 250ms linear}
@@ -228,6 +233,11 @@ h3{font-family:var(--f-display);font-weight:600;font-size:17px;line-height:1.25;
 .seg{display:grid;grid-template-columns:repeat(3,1fr);background:var(--track);border-radius:9px;padding:2px;gap:2px}
 .seg button{border:0;background:transparent;min-height:32px;font-weight:500;font-size:14px;border-radius:7px}
 .seg button[aria-pressed="true"]{background:var(--card);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+/* sliding thumb (added by render): one white pill moves to the selected option, as in iOS */
+.seg{position:relative;--n:3}
+.seg .thumb{position:absolute;top:2px;bottom:2px;left:2px;width:calc((100% - 4px - (var(--n) - 1) * 2px) / var(--n));background:var(--card);border-radius:7px;box-shadow:0 1px 3px rgba(0,0,0,.12);pointer-events:none}
+.seg.has-thumb button{position:relative;z-index:1}
+.seg.has-thumb button[aria-pressed="true"]{background:transparent;box-shadow:none}
 select.pick{width:100%;min-height:48px;border:0;border-radius:12px;background:var(--card);padding:0 14px;font-weight:600;font-size:17px}
 .big{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-top:4px}
 .big .v{font-weight:700;font-size:56px;line-height:1;letter-spacing:-.035em;font-variant-numeric:tabular-nums}
@@ -300,11 +310,12 @@ textarea.dump{width:100%;min-height:140px;border:0;border-radius:10px;background
 @media (prefers-reduced-motion: reduce){
   .btn.block:active,.done:active,.card.tap:active{transform:none}
   .done.pop path{animation:none}
-  .swipe-fg,.swipe-del{transition:none}
   .sheet.closing .in,.modal.closing .box{transform:none}
   .toast.closing{transform:translateX(-50%)}
   @starting-style{.sheet .in{transform:none}.modal .box{transform:none}.toast{transform:translateX(-50%)}}
   .timer.over .in{animation:pulseFade 1.6s ease-in-out infinite}
+  .timer.closing .in{transform:none}
+  @starting-style{.timer .in{transform:none}}
 }
 @keyframes pulseFade{0%,100%{opacity:1}50%{opacity:.82}}
 
@@ -316,19 +327,19 @@ textarea.dump{width:100%;min-height:140px;border:0;border-radius:10px;background
 
 /* swipe to delete */
 .swipe{position:relative;border-radius:var(--r);overflow:hidden}
-.swipe-del{position:absolute;right:0;top:0;bottom:0;width:96px;border:0;background:var(--bad);color:#fff;font-weight:600;font-size:15px;border-radius:0 var(--r) var(--r) 0;visibility:hidden;
-  display:flex;align-items:center;justify-content:center;white-space:nowrap;transition:width 300ms var(--ease-drawer)}
-.swipe.dragging>.swipe-del{transition:none}
-/* full swipe (past half the row): the label jumps against the content edge = "release to delete" */
-.swipe.armed>.swipe-del{justify-content:flex-start;padding-left:22px}
+/* the red layer is always full width under the row (no width animation): only the row and the label move (transform) */
+.swipe-del{position:absolute;inset:0;border:0;padding:0;background:var(--bad);color:#fff;font-weight:600;font-size:15px;border-radius:var(--r);visibility:hidden;container-type:inline-size}
+/* label: centred in the 96 px button at rest; once armed (past half the row) it jumps against the content edge */
+.swipe-del .lbl{position:absolute;left:0;top:0;bottom:0;display:flex;align-items:center;white-space:nowrap;pointer-events:none;
+  transform:translateX(calc(100cqw - 48px - 50%));transition:transform 200ms var(--ease-out)}
+.swipe.full>.swipe-del .lbl{transform:translateX(22px)}
 .swipe.full>.swipe-fg{transform:translateX(-100%)}
-.swipe.full>.swipe-del{width:100%;visibility:visible;justify-content:flex-start;padding-left:22px}
-.swipe.open>.swipe-del,.swipe.dragging>.swipe-del{visibility:visible}
+.swipe.open>.swipe-del,.swipe.dragging>.swipe-del,.swipe.settling>.swipe-del,.swipe.full>.swipe-del{visibility:visible}
 .swipe-fg{position:relative;z-index:1;background:var(--card);border-radius:var(--r);transition:transform 300ms var(--ease-drawer);touch-action:pan-y;will-change:transform}
-/* the red button stays visible while the row slides back, and fills the gap when the row is pulled past it */
-.swipe.settling>.swipe-del{visibility:visible}
 .swipe.dragging,.swipe.open,.swipe.settling,.swipe.full{background:var(--bad)}
 .swipe.dragging .lrow:active{background:transparent}
+/* reduced motion: the row still follows the finger, but snaps on release (placed after the rules it overrides) */
+@media (prefers-reduced-motion: reduce){.swipe-fg,.swipe-del .lbl{transition:none}}
 .swipe.open>.swipe-fg{transform:translateX(-96px);border-radius:var(--r) 0 0 var(--r)}
 .lrow{display:flex;align-items:center;gap:12px;padding:13px 16px;width:100%;text-align:left;background:none;border:0;min-height:60px}
 .lrow .t{flex:1;min-width:0}
@@ -366,7 +377,15 @@ textarea.dump{width:100%;min-height:140px;border:0;border-radius:10px;background
   -webkit-mask-image:linear-gradient(transparent,#000 32%,#000 68%,transparent);mask-image:linear-gradient(transparent,#000 32%,#000 68%,transparent)}
 .pcol::-webkit-scrollbar{display:none}
 .pcol div{height:44px;line-height:44px;text-align:center;scroll-snap-align:center;font-size:24px;font-variant-numeric:tabular-nums;color:var(--muted);cursor:pointer}
-.pcol div.on{color:var(--ink);font-weight:600}
+.pcol div.on{color:var(--ink)}
+/* cylinder: each value tilts away as it leaves the centre band; driven by the scroll itself (off the main thread, smooth during momentum).
+   Without scroll-driven animation support the wheel stays flat, as before. */
+@supports (animation-timeline: view()){
+  .pcol div{animation:wheel linear both;animation-timeline:view(block)}
+  @media (prefers-reduced-motion: reduce){.pcol div{animation-name:wheelFade}}
+}
+@keyframes wheel{0%{transform:perspective(400px) rotateX(-60deg);opacity:.3}50%{transform:none;opacity:1}100%{transform:perspective(400px) rotateX(60deg);opacity:.3}}
+@keyframes wheelFade{0%{opacity:.3}50%{opacity:1}100%{opacity:.3}}
 
 /* routine & exercise editors */
 .ied{padding:14px 16px;display:flex;flex-direction:column;gap:10px}
@@ -394,7 +413,7 @@ textarea.dump{width:100%;min-height:140px;border:0;border-radius:10px;background
 .switch:checked::after{transform:translateX(20px)}
 .switch:disabled{opacity:.4}
 .seg.three{grid-template-columns:repeat(3,1fr)}
-.seg.four{grid-template-columns:repeat(4,1fr)}
+.seg.four{grid-template-columns:repeat(4,1fr);--n:4}
 .steprow{display:grid;grid-template-columns:24px minmax(0,1fr) minmax(0,1fr);grid-template-areas:"n nm nm" "n lo hi";gap:6px;align-items:center;padding:8px 10px}
 .steprow .n{grid-area:n}.steprow [data-sf=n]{grid-area:nm}.steprow [data-sf=lo]{grid-area:lo}.steprow [data-sf=hi]{grid-area:hi}
 .steprow .n{font-weight:700;color:var(--muted);text-align:center;font-variant-numeric:tabular-nums}
@@ -485,6 +504,8 @@ const DAYS=["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"];
 const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v);return true}catch(e){return false}};
 const lsDel=k=>{try{localStorage.removeItem(k)}catch(e){}};
+/* reduced motion: read live (the setting can change while the app is open) */
+const RM=(()=>{try{return matchMedia("(prefers-reduced-motion: reduce)")}catch(e){return{matches:false}}})();
 /* show / hide an overlay with its CSS exit transition: .closing plays the exit, then hidden; showing again cancels a pending hide */
 function showEl(el){clearTimeout(el._hideT);el.classList.remove("closing");el.hidden=false}
 function hideEl(el,ms){if(el.hidden)return;clearTimeout(el._hideT);el.classList.add("closing");el._hideT=setTimeout(()=>{el.hidden=true;el.classList.remove("closing")},ms)}
@@ -711,14 +732,31 @@ function renderTabs(){$("#tabs").innerHTML=TABS.map(([k,l,ic])=>`<button class="
 function render(){
   swOpen=null;renderTabs();
   const v={enregistrer:vRecord,routines:vRoutines,exercices:vExercises,progres:vProgress,historique:vHistory}[ui.tab]||vRecord;
-  main.innerHTML=v();paintThemeBtn();bindChart();
+  const segX=segPositions();
+  main.innerHTML=v();paintThemeBtn();bindChart();paintSegs(segX);revealLvl();
 }
-function go(tab){ui.tab=tab;ui.editRoutine=null;ui.editEx=null;saveUI();try{if(location.hash!=="#"+tab)window.history.replaceState(null,"","#"+tab)}catch(e){}render();window.scrollTo(0,0)}
+/* tab change: a short fade of the new content only (iOS switches tabs without a transition; no slide, nothing to wait for).
+   Tapping quickly fades from the current opacity, so it never blinks. Same tab with nothing to close: back to the top. */
+function go(tab){
+  if(tab===ui.tab&&!ui.editRoutine&&!ui.editEx){window.scrollTo({top:0,behavior:RM.matches?"auto":"smooth"});return}
+  const changed=tab!==ui.tab;ui.tab=tab;ui.editRoutine=null;ui.editEx=null;saveUI();try{if(location.hash!=="#"+tab)window.history.replaceState(null,"","#"+tab)}catch(e){}
+  const from=+getComputedStyle(main).opacity;render();window.scrollTo(0,0);
+  if(changed&&main.animate){main.getAnimations().forEach(a=>a.cancel());main.animate([{opacity:Math.min(from,.4)},{opacity:1}],{duration:150,easing:"ease-out"})}}
+/* segmented controls: render() rebuilds them, so the thumb's on-screen position is read just before and it slides from there (200 ms) */
+function segPositions(){const m={};main.querySelectorAll(".seg .thumb").forEach(t=>{m[t.parentElement.getAttribute("aria-label")]=t.getBoundingClientRect().left-t.parentElement.getBoundingClientRect().left});return m}
+function paintSegs(prev){main.querySelectorAll(".seg").forEach(seg=>{const bs=[...seg.querySelectorAll("button")];const i=bs.findIndex(b=>b.getAttribute("aria-pressed")==="true");if(i<0)return;
+  const th=document.createElement("i");th.className="thumb";th.style.transform=`translateX(calc(${i} * (100% + 2px)))`;seg.prepend(th);seg.classList.add("has-thumb");
+  const p=prev[seg.getAttribute("aria-label")];if(p==null||RM.matches)return;const dx=p-(th.getBoundingClientRect().left-seg.getBoundingClientRect().left);
+  if(Math.abs(dx)>.5)th.animate([{transform:`translateX(calc(${i} * (100% + 2px) + ${dx}px))`},{transform:th.style.transform}],{duration:200,easing:"cubic-bezier(.77,0,.175,1)"})})}
+/* level up / regression banner: arrives once (scale .96 → 1, 250 ms, 50 ms apart), later renders do not replay it */
+const lvlSeen=new Set();
+function revealLvl(){let k=0;main.querySelectorAll(".lvl[data-k]").forEach(el=>{const key=el.dataset.k;if(lvlSeen.has(key))return;lvlSeen.add(key);if(!el.animate)return;
+  el.animate(RM.matches?[{opacity:0},{opacity:1}]:[{opacity:0,transform:"scale(.96)"},{opacity:1,transform:"none"}],{duration:250,delay:50*k++,easing:"cubic-bezier(.23,1,.32,1)",fill:"backwards"})})}
 function blocks(list){const b=[];list.forEach((e,i)=>{if(i>0&&e.link&&b.length)b[b.length-1].push(i);else b.push([i])});return b}
 const grpName=n=>n===2?"Superset":n===3?"Triset":"Circuit";
 const LETTERS="ABCDEFGHIJ";
 function tempoHTML(t){return t?`<span class="tempo" title="Excentrique – pause – concentrique, en secondes"><span>Tempo</span><b>${esc(t)}</b></span>`:""}
-function swipeRow(kind,id,inner,extraClass){return `<div class="swipe" data-kind="${kind}" data-id="${esc(id)}"><button class="swipe-del" data-act="swipe-del" tabindex="-1">Supprimer</button><div class="swipe-fg ${extraClass||""}">${inner}</div></div>`}
+function swipeRow(kind,id,inner,extraClass){return `<div class="swipe" data-kind="${kind}" data-id="${esc(id)}"><button class="swipe-del" data-act="swipe-del" tabindex="-1"><span class="lbl">Supprimer</span></button><div class="swipe-fg ${extraClass||""}">${inner}</div></div>`}
 
 /* ===== Enregistrer ===== */
 function vBilan(){
@@ -805,7 +843,7 @@ function exInner(ei,label){
   }).join("");
   let lvl="";
   if(e.pending){const p=e.pending;
-    lvl=`<div class="lvl ${p.dir}"><span class="k">${p.dir==="up"?"Level up · augmente la difficulté":"Régression · allège"}</span>
+    lvl=`<div class="lvl ${p.dir}" data-k="${esc((draft&&draft.id||"")+"|"+ei+"|"+p.dir+"|"+(p.to||p.msg||""))}"><span class="k">${p.dir==="up"?"Level up · augmente la difficulté":"Régression · allège"}</span>
       <span class="d">${p.auto?`${esc(p.from)} → <b>${esc(p.to)}</b>`:esc(p.msg)}</span>
       <span class="d" style="font-weight:500;font-size:13px">${p.dir==="up"?"Haut de fourchette réussi 2 séances d'affilée.":"Bas de fourchette manqué 2 séances d'affilée."}</span>
       ${p.alt&&item?`<button class="undo" data-act="alt-ext" data-ei="${ei}">Saut trop grand : vise d'abord ${(item.hi??0)+2} reps à l'ancienne charge</button>`:""}
@@ -886,7 +924,7 @@ function unlockAudio(){
 function stopAlarm(){if(!alarmOn)return;alarmOn=false;try{alarmEl&&alarmEl.pause();alarmEl&&(alarmEl.currentTime=0)}catch(e){}setSession("auto")}
 function startTimer(sec,label){stopAlarm();draft.timer={kind:"rest",end:Date.now()+sec*1000,total:sec,label};saveDraft();overShown=false;unlockAudio();showTimer()}
 function startChain(label){stopAlarm();draft.timer={kind:"chain",start:Date.now(),label};saveDraft();showTimer()}
-function stopTimer(){stopAlarm();if(draft){draft.timer=null;saveDraft()}const el=$("#timer");el.hidden=true;el.classList.remove("over","chain")}
+function stopTimer(){stopAlarm();if(draft){draft.timer=null;saveDraft()}hideEl($("#timer"),200)}
 function beepWA(){try{if(!audioCtx){const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;audioCtx=new AC()}audioCtx.resume&&audioCtx.resume();setTimeout(()=>{try{audioCtx.suspend()}catch(e){}},1200);const t=audioCtx.currentTime;[0,.22,.44].forEach(o=>{const g=audioCtx.createGain(),os=audioCtx.createOscillator();os.frequency.value=880;os.connect(g);g.connect(audioCtx.destination);g.gain.setValueAtTime(.0001,t+o);g.gain.exponentialRampToValueAtTime(.3,t+o+.02);g.gain.exponentialRampToValueAtTime(.0001,t+o+.18);os.start(t+o);os.stop(t+o+.2)})}catch(e){}}
 function beep(){if(alarmEl&&alarmOk){alarmOn=true;setSession("playback");alarmEl.muted=false;try{alarmEl.currentTime=0}catch(e){}const pr=alarmEl.play();if(pr)pr.catch(()=>{alarmOn=false;setSession("auto");beepWA()});return}beepWA()}
 function paintNext(){
@@ -897,8 +935,8 @@ function paintNext(){
   el.innerHTML=`<span class="nm">Ensuite : ${esc(e.name)} · série ${n.si+1}</span>${e.tempo?tempoHTML(e.tempo):'<span style="opacity:.7;white-space:nowrap">tempo libre</span>'}`;
 }
 function showTimer(){
-  const T=draft&&draft.timer;const el=$("#timer");if(!T){el.hidden=true;return}
-  el.hidden=false;paintNext();
+  const T=draft&&draft.timer;const el=$("#timer");if(!T){hideEl(el,200);return}
+  if(el.hidden||el.classList.contains("closing"))showEl(el);paintNext();
   if(T.kind==="chain"){el.classList.add("chain");el.classList.remove("over");$("#timerBarWrap").hidden=true;$("#tMinus").hidden=true;$("#tPlus").hidden=true;
     const s=(Date.now()-T.start)/1000;$("#timerLbl").textContent="Enchaîne · pas de repos · "+mmss(s);$("#timerVal").textContent=T.label;if(s>300)stopTimer();return}
   el.classList.remove("chain");$("#timerBarWrap").hidden=false;$("#tMinus").hidden=false;$("#tPlus").hidden=false;
@@ -1236,38 +1274,66 @@ function pickValue(){const cm=$("#pcM"),cs=$("#pcS");return Math.round(cm.scroll
 
 /* ================= swipe to delete ================= */
 let sw=null,swOpen=null,swSuppress=0;
-/* while a row slides back, its red button stays visible (no empty gap) */
-function settle(row){row.classList.add("settling");clearTimeout(row._setT);row._setT=setTimeout(()=>row.classList.remove("settling"),320)}
-function closeSwipe(){if(swOpen){swOpen.classList.remove("open");settle(swOpen);swOpen=null}}
+/* current on-screen x of a row (mid-transition included): a row caught while it slides stops under the finger */
+const curX=el=>{const t=getComputedStyle(el).transform;return !t||t==="none"?0:new DOMMatrix(t).m41};
+/* release: the row finishes in a time that follows the finger's speed (fast flick = short), drawer curve */
+function slideTo(fg,dist,v){const ms=RM.matches?0:Math.round(clamp(Math.abs(v)>.05?dist/Math.abs(v):300,180,300));
+  fg.style.transition=ms?`transform ${ms}ms var(--ease-drawer)`:"none";fg.style.transform="";return ms}
+/* while a row slides back, its red layer stays visible (no empty gap) */
+function settle(row,ms){row.classList.add("settling");clearTimeout(row._setT);row._setT=setTimeout(()=>row.classList.remove("settling"),(ms??300)+40)}
+function closeSwipe(){if(swOpen){const fg=swOpen.querySelector(":scope>.swipe-fg");if(fg)fg.style.transition="";swOpen.classList.remove("open");settle(swOpen);swOpen=null}}
 document.addEventListener("pointerdown",ev=>{
   const fg=ev.target.closest(".swipe-fg");
   if(swOpen&&!ev.target.closest(".swipe-del")&&(!fg||fg.parentElement!==swOpen))closeSwipe();
   if(!fg||ev.button>0||ev.target.closest("input,textarea,select,.sugg"))return;
-  const row=fg.parentElement;sw={fg,row,del:row.querySelector(":scope>.swipe-del"),w:row.offsetWidth,x0:ev.clientX,y0:ev.clientY,t0:Date.now(),dir:null,base:row.classList.contains("open")?-96:0,x:null,armed:false,id:ev.pointerId};
+  const row=fg.parentElement;if(row.classList.contains("full"))return;
+  sw={fg,row,lbl:row.querySelector(":scope>.swipe-del .lbl"),w:row.offsetWidth,x0:ev.clientX,y0:ev.clientY,t0:Date.now(),dir:null,base:0,x:null,armed:false,armT:0,vx:0,lx:ev.clientX,lt:performance.now(),id:ev.pointerId};
 },{passive:true});
 document.addEventListener("pointermove",ev=>{
   if(!sw||ev.pointerId!==sw.id)return;const dx=ev.clientX-sw.x0,dy=ev.clientY-sw.y0;
-  if(!sw.dir){if(Math.abs(dx)<8&&Math.abs(dy)<8)return;sw.dir=Math.abs(dx)>Math.abs(dy)?"h":"v";if(sw.dir==="h"){sw.fg.style.transition="none";sw.row.classList.add("dragging")}}
-  /* the red button stretches to fill what is uncovered; past half the row it is "armed": releasing asks to delete */
-  if(sw.dir!=="h")return;sw.x=clamp(sw.base+dx,-sw.w,0);sw.fg.style.transform=`translateX(${sw.x}px)`;
-  if(sw.del)sw.del.style.width=Math.max(96,-sw.x)+"px";const armed=sw.x<=-sw.w*.5;if(armed!==sw.armed){sw.armed=armed;sw.row.classList.toggle("armed",armed)}
+  if(!sw.dir){if(Math.abs(dx)<8&&Math.abs(dy)<8)return;sw.dir=Math.abs(dx)>Math.abs(dy)?"h":"v";
+    if(sw.dir==="h"){sw.base=curX(sw.fg)-dx;sw.fg.style.transition="none";sw.row.classList.add("dragging");clearTimeout(sw.row._setT);sw.row.classList.remove("settling")}}
+  if(sw.dir!=="h")return;
+  const now=performance.now(),dt=now-sw.lt;if(dt>0){sw.vx=.6*((ev.clientX-sw.lx)/dt)+.4*sw.vx;sw.lx=ev.clientX;sw.lt=now}
+  sw.x=clamp(sw.base+dx,-sw.w,0);sw.fg.style.transform=`translateX(${sw.x}px)`;
+  /* past half the row it is "armed": releasing asks to delete. The label jumps (200 ms) to the content edge, then follows the finger */
+  const armed=sw.x<=-sw.w*.5;
+  if(armed!==sw.armed){sw.armed=armed;sw.armT=now;sw.row.classList.toggle("armed",armed);if(sw.lbl){sw.lbl.style.transition="";if(!armed)sw.lbl.style.transform=""}}
+  if(armed&&sw.lbl){if(now-sw.armT>200&&!RM.matches)sw.lbl.style.transition="none";sw.lbl.style.transform=`translateX(${sw.w+sw.x+22}px)`}
 },{passive:true});
 /* open if pulled past half the button, or flicked: a quick swipe is enough (speed in px/ms, at least 20 px) */
 /* full swipe released: the row slides out, then the usual confirmation; Cancel brings the row back */
-function unfull(row){row.classList.remove("full","armed");settle(row)}
-function endSwipe(){if(!sw)return;sw.row.classList.remove("dragging");if(sw.del)sw.del.style.width="";
-  if(sw.dir==="h"&&sw.armed){const row=sw.row;sw.fg.style.transition="";sw.fg.style.transform="";row.classList.remove("open");if(swOpen===row)swOpen=null;row.classList.add("full");swSuppress=Date.now();sw=null;
+function unfull(row){const fg=row.querySelector(":scope>.swipe-fg");if(fg)fg.style.transition="";row.classList.remove("full","armed");settle(row)}
+function endSwipe(){if(!sw)return;const s=sw;sw=null;s.row.classList.remove("dragging");if(s.lbl){s.lbl.style.transition="";s.lbl.style.transform=""}
+  if(s.dir==="h"&&s.armed){const row=s.row;slideTo(s.fg,s.w+(s.x??0),s.vx);row.classList.remove("open");if(swOpen===row)swOpen=null;row.classList.add("full");swSuppress=Date.now();
     askDelete(row.dataset.kind,row.dataset.id,()=>unfull(row));if($("#modal").hidden&&row.classList.contains("full"))unfull(row);return}
-  if(sw.dir==="h"){const x=sw.x??sw.base,dx=x-sw.base,v=dx/Math.max(1,Date.now()-sw.t0);
-  const open=Math.abs(dx)>=20&&Math.abs(v)>.11?v<0:x<-48;if(!open)settle(sw.row);sw.fg.style.transition="";sw.fg.style.transform="";sw.row.classList.toggle("open",open);
-  if(open){if(swOpen&&swOpen!==sw.row)swOpen.classList.remove("open");swOpen=sw.row}else if(swOpen===sw.row)swOpen=null;swSuppress=Date.now()}sw=null}
+  if(s.dir==="h"){const x=s.x??s.base,dx=x-s.base,v=dx/Math.max(1,Date.now()-s.t0);
+  const open=Math.abs(dx)>=20&&Math.abs(v)>.11?v<0:x<-48;const ms=slideTo(s.fg,Math.abs((open?-96:0)-x),s.vx);if(!open)settle(s.row,ms);s.row.classList.remove("armed");s.row.classList.toggle("open",open);
+  if(open){if(swOpen&&swOpen!==s.row){closeSwipe()}swOpen=s.row}else if(swOpen===s.row)swOpen=null;swSuppress=Date.now()}}
 document.addEventListener("pointerup",endSwipe);document.addEventListener("pointercancel",endSwipe);
 document.addEventListener("click",ev=>{
   if(Date.now()-swSuppress<350&&!ev.target.closest(".swipe-del")){ev.preventDefault();ev.stopPropagation();return}
   const fg=ev.target.closest(".swipe-fg");if(fg&&fg.parentElement.classList.contains("open")){ev.preventDefault();ev.stopPropagation();closeSwipe()}
 },true);
+/* FLIP: after a deletion re-renders the list, everything that moved slides from where it was to where it is (transform only).
+   Positions are read with getBoundingClientRect, which includes any slide still in flight, so a second deletion starts from what is on screen.
+   Rows are keyed by kind|id and measured against their parent, so a row inside a block that moves is not moved twice. */
+function flipKeys(){const m=new Map();
+  [...main.children].forEach((el,i)=>m.set("m"+i+"|"+el.tagName+"|"+el.className,{el,top:el.getBoundingClientRect().top}));
+  main.querySelectorAll(".swipe[data-kind]").forEach(el=>m.set("s"+el.dataset.kind+"|"+el.dataset.id,{el,top:el.getBoundingClientRect().top-el.parentElement.getBoundingClientRect().top}));
+  return m}
+function flip(mutate,remap){if(RM.matches){mutate();return}
+  const before=flipKeys();mutate();
+  flipKeys().forEach((a,k)=>{const b=before.get(remap?remap(k):k);if(!b)return;const dy=b.top-a.top;
+    if(Math.abs(dy)>.5&&Math.abs(dy)<window.innerHeight)a.el.animate([{transform:`translateY(${dy}px)`},{transform:"none"}],{duration:250,easing:"cubic-bezier(.23,1,.32,1)"})})}
+/* confirmed deletion: the row fades (150 ms), then the list closes up */
+function removeRow(row,commit,remap){
+  if(!row||!row.isConnected){commit();return}
+  let done=false;const go=()=>{if(done)return;done=true;flip(commit,remap)};
+  row.style.pointerEvents="none";row.animate([{opacity:1},{opacity:0}],{duration:150,easing:"ease-out",fill:"forwards"}).finished.then(go,go);setTimeout(go,220)}
 function askDelete(kind,id,onCancel){
-  const ask=(t,m,l,ok)=>confirmBox(t,m,l,ok,onCancel);
+  const row=[...document.querySelectorAll(".swipe[data-kind]")].find(r=>r.dataset.kind===kind&&r.dataset.id===String(id));
+  const ask=(t,m,l,ok,remap)=>confirmBox(t,m,l,()=>removeRow(row,ok,remap),onCancel);
   const curR=S.routines.find(x=>x.id===ui.editRoutine);const curEx=exById(ui.editEx);
   if(kind==="routine"){const r=S.routines.find(x=>x.id===id);if(!r)return;
     ask(`Supprimer « ${rName(r.name)} » ?`,"Cette action est irréversible.","Supprimer",()=>{S.routines=S.routines.filter(x=>x.id!==id);save();render()})}
@@ -1281,7 +1347,9 @@ function askDelete(kind,id,onCancel){
   else if(kind==="sesex"){const[sid,k]=String(id).split("|");const s=S.sessions.find(x=>x.id===sid);const e=s&&s.exercises[+k];if(!e)return;
     ask(`Retirer « ${e.name} » de cette séance ?`,`${rName(s.routine)}, ${fmtDateShort(s.date)} : ${setsTxt(e)}. Cette action est irréversible.`,"Retirer",()=>{s.exercises.splice(+k,1);if(!s.exercises.length){S.sessions=S.sessions.filter(x=>x!==s);if(!S.sessions.some(x=>x.date===ui.calDay))ui.calDay=null}s.updatedAt=Date.now();save();render()})}
   else if(kind==="step"&&curEx){const i=+id;
-    ask("Supprimer cette étape ?",(curEx.steps[i]&&curEx.steps[i].n)||"Étape "+(i+1),"Supprimer",()=>{curEx.steps.splice(i,1);if(curEx.lvl>=curEx.steps.length)curEx.lvl=Math.max(0,curEx.steps.length-1);else if(i<curEx.lvl)curEx.lvl--;exChanged(curEx,true);render()})}
+    ask("Supprimer cette étape ?",(curEx.steps[i]&&curEx.steps[i].n)||"Étape "+(i+1),"Supprimer",()=>{curEx.steps.splice(i,1);if(curEx.lvl>=curEx.steps.length)curEx.lvl=Math.max(0,curEx.steps.length-1);else if(i<curEx.lvl)curEx.lvl--;exChanged(curEx,true);render()},
+      /* steps are keyed by index: after deleting step i, step j>i was j+1 */
+      k=>{const mm=/^sstep\|(\d+)$/.exec(k);return mm&&+mm[1]>=i?"sstep|"+(+mm[1]+1):k})}
 }
 
 /* ================= suggestions (exercise autocomplete) ================= */
