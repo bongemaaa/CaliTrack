@@ -216,6 +216,9 @@ h3{font-family:var(--f-display);font-weight:600;font-size:17px;line-height:1.25;
 /* scrim = separate layer: while the sheet is dragged down its opacity follows the finger (opacity only) */
 .sheet>.scrim{position:absolute;inset:0;background:var(--scrim)}
 .sheet>.in{position:relative}
+/* pulled up, an iOS sheet stretches: its bottom never leaves the screen edge. A layer of the sheet's colour stays
+   at the bottom and is shown (opacity) only while the panel is above its rest position, so no page shows through */
+.sheet>.fill{position:absolute;bottom:0;left:50%;width:100%;max-width:560px;height:45vh;transform:translateX(-50%);background:var(--sheet);opacity:0;pointer-events:none}
 .sheet[hidden]{display:none}
 /* sheet rises from the bottom (iOS drawer curve), leaves faster; .closing is set by hideEl() before hidden */
 .sheet{transition:opacity 300ms ease}
@@ -468,7 +471,7 @@ body.kb .tabbar,body.kb .timer{display:none}
 
 <nav class="tabbar" aria-label="Navigation"><div class="in" id="tabs"></div></nav>
 <div class="toast" id="toast" hidden></div>
-<div class="sheet" id="sheet" hidden><div class="scrim" id="sheetScrim"></div><div class="in" id="sheetIn" role="dialog" aria-modal="true"></div></div>
+<div class="sheet" id="sheet" hidden><div class="scrim" id="sheetScrim"></div><div class="fill" id="sheetFill"></div><div class="in" id="sheetIn" role="dialog" aria-modal="true"></div></div>
 <div class="modal" id="modal" hidden><div class="box" role="alertdialog" aria-modal="true" aria-labelledby="mTitle"><h3 id="mTitle"></h3><p id="mMsg"></p><div class="mbtns" id="mBtns"></div></div></div>
 <input type="file" id="importFile" accept=".json,application/json" hidden>
 
@@ -504,14 +507,6 @@ const lsDel=k=>{try{localStorage.removeItem(k)}catch(e){}};
 const RM=(()=>{try{return matchMedia("(prefers-reduced-motion: reduce)")}catch(e){return{matches:false}}})();
 /* show / hide an overlay with its CSS exit transition: .closing plays the exit, then hidden; showing again cancels a pending hide */
 function showEl(el){clearTimeout(el._hideT);if(el.id==="sheet")sheetReset();el.classList.remove("closing");el.hidden=false}
-/* haptic tick: Safari iOS has no Vibration API, but since iOS 18 toggling a native <input type="checkbox" switch>
-   plays the system haptic. A hidden one is toggled through its label; it only works inside a user gesture
-   (click, touchend…), elsewhere nothing happens. Android: a short vibration. */
-const haptic=(()=>{let lab=null;return()=>{try{
-  if(navigator.vibrate){navigator.vibrate(10);return}
-  if(!lab){lab=document.createElement("label");lab.setAttribute("aria-hidden","true");lab.dataset.haptic="";lab.style.display="none";
-    const i=document.createElement("input");i.type="checkbox";i.setAttribute("switch","");i.tabIndex=-1;lab.appendChild(i);document.body.appendChild(lab)}
-  lab.click()}catch(e){}}})();
 function hideEl(el,ms){if(el.hidden)return;clearTimeout(el._hideT);el.classList.add("closing");el._hideT=setTimeout(()=>{el.hidden=true;el.classList.remove("closing")},ms)}
 let toastT;
 function toast(msg){const t=$("#toast");t.textContent=msg;showEl(t);clearTimeout(toastT);toastT=setTimeout(()=>hideEl(t,200),2400)}
@@ -763,7 +758,7 @@ function paintSegs(prev){main.querySelectorAll(".seg").forEach(seg=>{const bs=[.
   if(Math.abs(dx)>.5)th.animate([{transform:`translateX(calc(${i} * (100% + 2px) + ${dx}px))`},{transform:th.style.transform}],{duration:200,easing:"cubic-bezier(.77,0,.175,1)"})})}
 /* level up / regression banner: arrives once (scale .96 → 1, 250 ms, 50 ms apart), later renders do not replay it */
 const lvlSeen=new Set();
-function revealLvl(){let k=0,hp=0;main.querySelectorAll(".lvl[data-k]").forEach(el=>{const key=el.dataset.k;if(lvlSeen.has(key))return;lvlSeen.add(key);if(el.classList.contains("up")&&!hp++)haptic();if(!el.animate)return;
+function revealLvl(){let k=0;main.querySelectorAll(".lvl[data-k]").forEach(el=>{const key=el.dataset.k;if(lvlSeen.has(key))return;lvlSeen.add(key);if(!el.animate)return;
   el.animate(RM.matches?[{opacity:0},{opacity:1}]:[{opacity:0,transform:"scale(.96)"},{opacity:1,transform:"none"}],{duration:250,delay:50*k++,easing:"cubic-bezier(.23,1,.32,1)",fill:"backwards"})})}
 function blocks(list){const b=[];list.forEach((e,i)=>{if(i>0&&e.link&&b.length)b[b.length-1].push(i);else b.push([i])});return b}
 const grpName=n=>n===2?"Superset":n===3?"Triset":"Circuit";
@@ -1268,12 +1263,12 @@ function closeSheet(){hideEl($("#sheet"),260);pickCb=null}
    Release: the finger's speed is projected forward (iOS deceleration, 0.998): past half the sheet's height it closes,
    continuing at the finger's speed; otherwise it springs back. Grabbable mid-flight (starts from the on-screen value).
    Touch events (not pointer): the decision to take over must preventDefault the touchmove before iOS starts scrolling. */
-const sheetIn=$("#sheetIn"),sheetScrim=$("#sheetScrim");
+const sheetIn=$("#sheetIn"),sheetScrim=$("#sheetScrim"),sheetFill=$("#sheetFill");
 const curY=el=>{const t=getComputedStyle(el).transform;return !t||t==="none"?0:new DOMMatrix(t).m42};
 const rubber=(o,d)=>o*d*.55/(d+.55*Math.abs(o));
 let sd=null;
-function sheetReset(){[sheetIn,sheetScrim].forEach(el=>{el.getAnimations().forEach(a=>a.cancel());el.style.transition="";el.style.transform="";el.style.opacity=""});sd=null}
-function sheetPaint(y,h){sheetIn.style.transform=`translateY(${y}px)`;sheetScrim.style.opacity=String(clamp(1-y/h,0,1))}
+function sheetReset(){[sheetIn,sheetScrim,sheetFill].forEach(el=>{el.getAnimations().forEach(a=>a.cancel());el.style.transition="";el.style.transform="";el.style.opacity=""});sd=null}
+function sheetPaint(y,h){sheetIn.style.transform=`translateY(${y}px)`;sheetScrim.style.opacity=String(clamp(1-y/h,0,1));sheetFill.style.opacity=y<0?"1":""}
 sheetIn.addEventListener("touchstart",ev=>{
   sd=null;if(ev.touches.length>1||$("#sheet").classList.contains("closing"))return;
   if(ev.target.closest(".pcol,input,textarea,select"))return; /* the rest wheel and fields keep their own gestures */
@@ -1310,10 +1305,10 @@ function sheetRelease(){
   /* back to rest from where it is (iOS drawer curve); interruptible by the next touchstart */
   const fromY=s.y,fromO=sheetScrim.style.opacity||1;
   /* no CSS transition under the WAAPI one (it would replay after it); restored once settled */
-  sheetIn.style.transition="none";sheetIn.style.transform="";sheetScrim.style.opacity="";void getComputedStyle(sheetIn).transform;
-  if(RM.matches||Math.abs(fromY)<.5){sheetIn.style.transition="";return}
+  sheetIn.style.transition="none";sheetIn.style.transform="";sheetScrim.style.opacity="";if(fromY>=0)sheetFill.style.opacity="";void getComputedStyle(sheetIn).transform;
+  if(RM.matches||Math.abs(fromY)<.5){sheetIn.style.transition="";sheetFill.style.opacity="";return}
   const an=sheetIn.animate([{transform:`translateY(${fromY}px)`},{transform:"none"}],{duration:Math.round(clamp(Math.abs(fromY)*1.2,200,380)),easing:"cubic-bezier(.32,.72,0,1)"});
-  an.finished.then(()=>{if(!sd)sheetIn.style.transition=""},()=>{});
+  an.finished.then(()=>{if(!sd){sheetIn.style.transition="";sheetFill.style.opacity=""}},()=>{});
   sheetScrim.animate([{opacity:fromO},{opacity:1}],{duration:250,easing:"ease-out"});
 }
 sheetIn.addEventListener("touchend",sheetRelease,{passive:true});
@@ -1384,7 +1379,7 @@ document.addEventListener("pointermove",ev=>{
 function unfull(row){row.classList.remove("full");resetRow(row)}
 function endSwipe(){if(!sw)return;const s=sw;sw=null;s.row.classList.remove("dragging");
   if(s.dir!=="h"){if(s.lbl){s.lbl.style.transition="";s.lbl.style.transform=""}return}
-  if(s.armed){haptic();const row=s.row;slideTo(s.fg,s.w+(s.x??0),s.vx,s.lbl);row.classList.remove("open");if(swOpen===row)swOpen=null;row.classList.add("full");swSuppress=Date.now();
+  if(s.armed){const row=s.row;slideTo(s.fg,s.w+(s.x??0),s.vx,s.lbl);row.classList.remove("open");if(swOpen===row)swOpen=null;row.classList.add("full");swSuppress=Date.now();
     askDelete(row.dataset.kind,row.dataset.id,()=>unfull(row));if($("#modal").hidden&&row.classList.contains("full"))unfull(row);return}
   const x=s.x??s.base,dx=x-s.base,v=dx/Math.max(1,Date.now()-s.t0);
   const open=Math.abs(dx)>=20&&Math.abs(v)>.11?v<0:x<-48;const ms=slideTo(s.fg,Math.abs((open?-96:0)-x),s.vx,s.lbl);if(!open)settle(s.row,ms);s.row.classList.remove("armed");s.row.classList.toggle("open",open);
@@ -1392,7 +1387,6 @@ function endSwipe(){if(!sw)return;const s=sw;sw=null;s.row.classList.remove("dra
 /* touchend / touchcancel as a safety net: endSwipe runs once (sw is cleared on entry) */
 ["pointerup","pointercancel","touchend","touchcancel"].forEach(t=>document.addEventListener(t,endSwipe,{passive:true}));
 document.addEventListener("click",ev=>{
-  if(ev.target.closest&&ev.target.closest("[data-haptic]"))return;
   if(Date.now()-swSuppress<350&&!ev.target.closest(".swipe-del")){ev.preventDefault();ev.stopPropagation();return}
   const fg=ev.target.closest(".swipe-fg");if(fg&&fg.parentElement.classList.contains("open")){ev.preventDefault();ev.stopPropagation();closeSwipe()}
 },true);
@@ -1471,12 +1465,12 @@ document.addEventListener("click",async ev=>{
     const v=Math.max(0,r2((+s[f]||0)+(a==="inc"?1:-1)*STEP[f]));s[f]=v;saveDraft();const inp=document.getElementById(`in-${ei}-${si}-${f}`);if(inp)inp.value=dec(v)}
   else if(a==="done"){const row=b.closest(".set");const ei=+row.dataset.ei,si=+row.dataset.si;const s=draft.exercises[ei].sets[si];
     s.done=!s.done;saveDraft();row.classList.toggle("ok",s.done);b.setAttribute("aria-pressed",s.done);
-    b.classList.remove("pop");if(s.done){void b.offsetWidth;b.classList.add("pop");haptic()}lastNextKey="";if(s.done)onSetDone(ei,si);
+    b.classList.remove("pop");if(s.done){void b.offsetWidth;b.classList.add("pop")}lastNextKey="";if(s.done)onSetDone(ei,si);
     const c=draft.exercises.reduce((x,e)=>x+e.sets.filter(s=>s.done).length,0);const lab=document.getElementById("doneCount");if(lab)lab.textContent=`${c} série${c>1?"s":""} validée${c>1?"s":""}`}
   else if(a==="note")b.classList.toggle("clamp");
   else if(a==="hist")openHist(b.dataset.name,b.dataset.ex);
   else if(a==="close-sheet")closeSheet();
-  else if(a==="pick-ok"){haptic();const cb=pickCb;const v=pickValue();closeSheet();cb&&cb(v)}
+  else if(a==="pick-ok"){const cb=pickCb;const v=pickValue();closeSheet();cb&&cb(v)}
   else if(a==="lvl-step"){const i=+b.dataset.ei;const de=draft.exercises[i];const ex=exById(de.ex);const f=findItem(de.item);if(!ex||!f)return;
     const nl=clamp(ex.lvl+(+b.dataset.d),0,ex.steps.length-1);if(nl===ex.lvl)return;ex.lvl=nl;exChanged(ex,true);
     const nd=buildDraftEx(f.i,ex);nd.link=de.link;draft.exercises[i]=nd;saveDraft();render();toast(`Étape ${nl+1} : ${stepLabel(ex,nl)}`)}
