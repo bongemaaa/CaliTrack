@@ -24,6 +24,8 @@
   /* elevation: floating bars (rest timer, toast), sheets, alerts; --press = row highlight on any surface */
   --float:#1C1C1E; --float-ink:#F5F5F7; --float-shadow:0 10px 30px rgba(0,0,0,.22);
   --sheet:var(--bg); --sheet-card:var(--card); --alert:var(--card); --press:rgba(120,120,128,.16);
+  /* materials (translucent, blurred): alert, toast + rest timer, "chain" timer */
+  --alert-mat:rgba(242,242,247,.8); --float-mat:rgba(28,28,30,.8); --card-mat:rgba(255,255,255,.8); --mat-blur:saturate(180%) blur(30px);
   --ease-out:cubic-bezier(.23,1,.32,1); --ease-in-out:cubic-bezier(.77,0,.175,1); --ease-drawer:cubic-bezier(.32,.72,0,1);
   --f-display:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Helvetica Neue","Segoe UI",Roboto,Arial,sans-serif;
   --f-body:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue","Segoe UI",Roboto,Arial,sans-serif;
@@ -35,14 +37,16 @@
   --good:#3DD27A; --good-soft:#12301D; --bad:#FF5F63; --bad-soft:#3A1618;
   --bar:rgba(22,22,24,.86); --scrim:rgba(0,0,0,.6);
   --float:#2C2C2E; --float-ink:#F5F5F7; --float-shadow:0 0 0 .5px rgba(255,255,255,.1),0 10px 30px rgba(0,0,0,.5);
-  --sheet:#1C1C1E; --sheet-card:#2C2C2E; --alert:#2C2C2E; --press:rgba(120,120,128,.28); color-scheme:dark}}
+  --sheet:#1C1C1E; --sheet-card:#2C2C2E; --alert:#2C2C2E; --press:rgba(120,120,128,.28);
+  --alert-mat:rgba(44,44,46,.78); --float-mat:rgba(44,44,46,.78); --card-mat:rgba(28,28,30,.8); color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#000000; --card:#1C1C1E; --ink:#F5F5F7; --muted:#9A9AA3; --line:#38383D; --track:#2C2C2E;
   --accent:#4C7BFF; --accent-ink:#FFFFFF; --accent-text:#7FA0FF; --accent-soft:#18233F;
   --good:#3DD27A; --good-soft:#12301D; --bad:#FF5F63; --bad-soft:#3A1618;
   --bar:rgba(22,22,24,.86); --scrim:rgba(0,0,0,.6);
   --float:#2C2C2E; --float-ink:#F5F5F7; --float-shadow:0 0 0 .5px rgba(255,255,255,.1),0 10px 30px rgba(0,0,0,.5);
-  --sheet:#1C1C1E; --sheet-card:#2C2C2E; --alert:#2C2C2E; --press:rgba(120,120,128,.28); color-scheme:dark}
+  --sheet:#1C1C1E; --sheet-card:#2C2C2E; --alert:#2C2C2E; --press:rgba(120,120,128,.28);
+  --alert-mat:rgba(44,44,46,.78); --float-mat:rgba(44,44,46,.78); --card-mat:rgba(28,28,30,.8); color-scheme:dark}
 
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -360,13 +364,17 @@ textarea.dump{width:100%;min-height:140px;border:0;border-radius:10px;background
 .badge{display:inline-block;font-size:11px;font-weight:600;border-radius:5px;padding:1px 6px;background:var(--accent-soft);color:var(--accent-text);margin-left:6px;vertical-align:2px}
 
 /* alert dialog */
-.modal{position:fixed;inset:0;z-index:50;background:var(--scrim);display:flex;align-items:center;justify-content:center;padding:24px}
+.modal{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:24px}
+.modal>.scrim{position:absolute;inset:0;background:var(--scrim)}
+.modal .box{position:relative}
 .modal[hidden]{display:none}
-/* alert: arrives slightly larger and settles (centred, not anchored to a trigger), fades out */
-.modal{transition:opacity 200ms ease-out}
-.modal .box{transition:transform 200ms var(--ease-out)}
-.modal.closing{opacity:0;pointer-events:none;transition-duration:150ms}
-@starting-style{.modal{opacity:0}.modal .box{transform:scale(1.08)}}
+/* alert: arrives slightly larger and settles (centred, not anchored to a trigger), fades out.
+   Scrim and box fade each on their own (not the .modal wrapper: a fading parent would cut the box's blur off from the page) */
+.modal>.scrim{transition:opacity 200ms ease-out}
+.modal .box{transition:transform 200ms var(--ease-out),opacity 200ms ease-out}
+.modal.closing{pointer-events:none}
+.modal.closing>.scrim,.modal.closing .box{opacity:0;transition-duration:150ms}
+@starting-style{.modal>.scrim{opacity:0}.modal .box{opacity:0;transform:scale(1.08)}}
 .modal .box{background:var(--alert);border-radius:16px;width:100%;max-width:290px;text-align:center;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.3)}
 .modal h3{padding:18px 16px 4px;font-size:17px;font-weight:600}
 .modal p{margin:0;padding:2px 16px 16px;font-size:13px;color:var(--muted)}
@@ -444,6 +452,24 @@ textarea.inp{min-height:110px;padding:10px 12px;line-height:1.4;resize:vertical}
 .link:active{opacity:.5;transition-duration:0ms}
 /* keyboard open: the fixed tab bar and rest timer would cover the field being typed in (the timer keeps running) */
 body.kb .tabbar,body.kb .timer{display:none}
+/* iOS materials: what floats above the content (alert, toast, rest timer) is a thick translucent layer that blurs
+   what lies behind. The overdue timer stays solid blue (colour goes on a solid layer). Reduced transparency or
+   increased contrast: back to the opaque colours. */
+.modal .box{background:var(--alert-mat);-webkit-backdrop-filter:var(--mat-blur);backdrop-filter:var(--mat-blur)}
+.mbtns,.mbtns button+button{border-color:rgba(127,127,127,.35)}
+.toast,.timer .in{background:var(--float-mat);-webkit-backdrop-filter:var(--mat-blur);backdrop-filter:var(--mat-blur)}
+.timer.chain .in{background:var(--card-mat)}
+.timer.over .in{background:var(--accent)}
+@media (prefers-reduced-transparency: reduce),(prefers-contrast: more){
+  .modal .box{background:var(--alert)}
+  .toast,.timer .in{background:var(--float)}
+  .timer.chain .in{background:var(--card)}
+  .timer.over .in{background:var(--accent)}
+  .modal .box,.toast,.timer .in{-webkit-backdrop-filter:none;backdrop-filter:none}
+  .mbtns,.mbtns button+button{border-color:var(--line)}
+}
+/* reduced motion: the alert only fades in (placed after the @starting-style above, which it overrides) */
+@media (prefers-reduced-motion: reduce){@starting-style{.modal .box{transform:none}}}
 </style>
 </head>
 <body>
@@ -472,7 +498,7 @@ body.kb .tabbar,body.kb .timer{display:none}
 <nav class="tabbar" aria-label="Navigation"><div class="in" id="tabs"></div></nav>
 <div class="toast" id="toast" hidden></div>
 <div class="sheet" id="sheet" hidden><div class="scrim" id="sheetScrim"></div><div class="fill" id="sheetFill"></div><div class="in" id="sheetIn" role="dialog" aria-modal="true"></div></div>
-<div class="modal" id="modal" hidden><div class="box" role="alertdialog" aria-modal="true" aria-labelledby="mTitle"><h3 id="mTitle"></h3><p id="mMsg"></p><div class="mbtns" id="mBtns"></div></div></div>
+<div class="modal" id="modal" hidden><div class="scrim" id="modalScrim"></div><div class="box" role="alertdialog" aria-modal="true" aria-labelledby="mTitle"><h3 id="mTitle"></h3><p id="mMsg"></p><div class="mbtns" id="mBtns"></div></div></div>
 <input type="file" id="importFile" accept=".json,application/json" hidden>
 
 <script>
@@ -1452,7 +1478,7 @@ function exChanged(ex,resetCount){if(resetCount)S.routines.forEach(r=>r.items.fo
 /* ================= events ================= */
 document.addEventListener("click",async ev=>{
   if(ev.target.id==="sheet"||ev.target.id==="sheetScrim"){closeSheet();return}
-  if(ev.target.id==="modal"){closeModal(true);return}
+  if(ev.target.id==="modal"||ev.target.id==="modalScrim"){closeModal(true);return}
   const tb=ev.target.closest("[data-tab]");if(tb){go(tb.dataset.tab);return}
   const b=ev.target.closest("[data-act]");if(!b)return;const a=b.dataset.act;
   if(a==="m-cancel"){closeModal(true);return}
