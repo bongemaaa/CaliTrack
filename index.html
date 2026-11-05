@@ -329,9 +329,10 @@ textarea.dump{width:100%;min-height:140px;border:0;border-radius:10px;background
 .swipe{position:relative;border-radius:var(--r);overflow:hidden}
 /* the red layer is always full width under the row (no width animation): only the row and the label move (transform) */
 .swipe-del{position:absolute;inset:0;border:0;padding:0;background:var(--bad);color:#fff;font-weight:600;font-size:15px;border-radius:var(--r);visibility:hidden;container-type:inline-size}
-/* label: centred in the 96 px button at rest; once armed (past half the row) it jumps against the content edge */
+/* label: centred in the uncovered red area (96 px at rest); once armed (past half the row) it jumps against the content edge.
+   It moves with the row: same duration and curve, never on its own delay */
 .swipe-del .lbl{position:absolute;left:0;top:0;bottom:0;display:flex;align-items:center;white-space:nowrap;pointer-events:none;
-  transform:translateX(calc(100cqw - 48px - 50%));transition:transform 200ms var(--ease-out)}
+  transform:translateX(calc(100cqw - 48px - 50%));transition:transform 300ms var(--ease-drawer)}
 .swipe.full>.swipe-del .lbl{transform:translateX(22px)}
 .swipe.full>.swipe-fg{transform:translateX(-100%)}
 .swipe.open>.swipe-del,.swipe.dragging>.swipe-del,.swipe.settling>.swipe-del,.swipe.full>.swipe-del{visibility:visible}
@@ -377,15 +378,7 @@ textarea.dump{width:100%;min-height:140px;border:0;border-radius:10px;background
   -webkit-mask-image:linear-gradient(transparent,#000 32%,#000 68%,transparent);mask-image:linear-gradient(transparent,#000 32%,#000 68%,transparent)}
 .pcol::-webkit-scrollbar{display:none}
 .pcol div{height:44px;line-height:44px;text-align:center;scroll-snap-align:center;font-size:24px;font-variant-numeric:tabular-nums;color:var(--muted);cursor:pointer}
-.pcol div.on{color:var(--ink)}
-/* cylinder: each value tilts away as it leaves the centre band; driven by the scroll itself (off the main thread, smooth during momentum).
-   Without scroll-driven animation support the wheel stays flat, as before. */
-@supports (animation-timeline: view()){
-  .pcol div{animation:wheel linear both;animation-timeline:view(block)}
-  @media (prefers-reduced-motion: reduce){.pcol div{animation-name:wheelFade}}
-}
-@keyframes wheel{0%{transform:perspective(400px) rotateX(-60deg);opacity:.3}50%{transform:none;opacity:1}100%{transform:perspective(400px) rotateX(60deg);opacity:.3}}
-@keyframes wheelFade{0%{opacity:.3}50%{opacity:1}100%{opacity:.3}}
+.pcol div.on{color:var(--ink);font-weight:600}
 
 /* routine & exercise editors */
 .ied{padding:14px 16px;display:flex;flex-direction:column;gap:10px}
@@ -1277,17 +1270,25 @@ let sw=null,swOpen=null,swSuppress=0;
 /* current on-screen x of a row (mid-transition included): a row caught while it slides stops under the finger */
 const curX=el=>{const t=getComputedStyle(el).transform;return !t||t==="none"?0:new DOMMatrix(t).m41};
 /* release: the row finishes in a time that follows the finger's speed (fast flick = short), drawer curve */
-function slideTo(fg,dist,v){const ms=RM.matches?0:Math.round(clamp(Math.abs(v)>.05?dist/Math.abs(v):300,180,300));
-  fg.style.transition=ms?`transform ${ms}ms var(--ease-drawer)`:"none";fg.style.transform="";return ms}
+function slideTo(fg,dist,v,lbl){const ms=RM.matches?0:Math.round(clamp(Math.abs(v)>.05?dist/Math.abs(v):300,180,300));
+  const tr=ms?`transform ${ms}ms var(--ease-drawer)`:"none";fg.style.transition=tr;fg.style.transform="";if(lbl){lbl.style.transition=tr;lbl.style.transform=""}return ms}
+/* put a row back to a clean state (inline styles and drag classes gone) */
+function resetRow(row){const fg=row.querySelector(":scope>.swipe-fg"),l=row.querySelector(":scope>.swipe-del .lbl");
+  if(fg){fg.style.transition="";fg.style.transform=""}if(l){l.style.transition="";l.style.transform=""}row.classList.remove("dragging","armed");settle(row)}
 /* while a row slides back, its red layer stays visible (no empty gap) */
 function settle(row,ms){row.classList.add("settling");clearTimeout(row._setT);row._setT=setTimeout(()=>row.classList.remove("settling"),(ms??300)+40)}
-function closeSwipe(){if(swOpen){const fg=swOpen.querySelector(":scope>.swipe-fg");if(fg)fg.style.transition="";swOpen.classList.remove("open");settle(swOpen);swOpen=null}}
+function closeSwipe(){if(swOpen){const r=swOpen;swOpen=null;r.classList.remove("open");resetRow(r)}}
 document.addEventListener("pointerdown",ev=>{
+  if(ev.isPrimary===false)return;
+  /* a gesture whose end never arrived (seen on iOS) is finished now, as if released: no row may stay stuck half-way */
+  if(sw)endSwipe();
   const fg=ev.target.closest(".swipe-fg");
+  document.querySelectorAll(".swipe").forEach(r=>{if(r===swOpen||(fg&&r===fg.parentElement)||r.classList.contains("full"))return;
+    const f=r.querySelector(":scope>.swipe-fg");if(r.classList.contains("dragging")||r.classList.contains("open")||(f&&f.style.transform)){r.classList.remove("open");resetRow(r)}});
   if(swOpen&&!ev.target.closest(".swipe-del")&&(!fg||fg.parentElement!==swOpen))closeSwipe();
   if(!fg||ev.button>0||ev.target.closest("input,textarea,select,.sugg"))return;
   const row=fg.parentElement;if(row.classList.contains("full"))return;
-  sw={fg,row,lbl:row.querySelector(":scope>.swipe-del .lbl"),w:row.offsetWidth,x0:ev.clientX,y0:ev.clientY,t0:Date.now(),dir:null,base:0,x:null,armed:false,armT:0,vx:0,lx:ev.clientX,lt:performance.now(),id:ev.pointerId};
+  sw={fg,row,lbl:row.querySelector(":scope>.swipe-del .lbl"),w:row.offsetWidth,x0:ev.clientX,y0:ev.clientY,t0:Date.now(),dir:null,base:0,x:null,armed:false,vx:0,lx:ev.clientX,lt:performance.now(),id:ev.pointerId};
 },{passive:true});
 document.addEventListener("pointermove",ev=>{
   if(!sw||ev.pointerId!==sw.id)return;const dx=ev.clientX-sw.x0,dy=ev.clientY-sw.y0;
@@ -1296,21 +1297,23 @@ document.addEventListener("pointermove",ev=>{
   if(sw.dir!=="h")return;
   const now=performance.now(),dt=now-sw.lt;if(dt>0){sw.vx=.6*((ev.clientX-sw.lx)/dt)+.4*sw.vx;sw.lx=ev.clientX;sw.lt=now}
   sw.x=clamp(sw.base+dx,-sw.w,0);sw.fg.style.transform=`translateX(${sw.x}px)`;
-  /* past half the row it is "armed": releasing asks to delete. The label jumps (200 ms) to the content edge, then follows the finger */
-  const armed=sw.x<=-sw.w*.5;
-  if(armed!==sw.armed){sw.armed=armed;sw.armT=now;sw.row.classList.toggle("armed",armed);if(sw.lbl){sw.lbl.style.transition="";if(!armed)sw.lbl.style.transform=""}}
-  if(armed&&sw.lbl){if(now-sw.armT>200&&!RM.matches)sw.lbl.style.transition="none";sw.lbl.style.transform=`translateX(${sw.w+sw.x+22}px)`}
+  /* the label stays centred in the uncovered red area; past half the row it is "armed" (releasing asks to delete)
+     and the label jumps against the content edge at once. Both follow the finger with no transition */
+  const armed=sw.x<=-sw.w*.5;if(armed!==sw.armed){sw.armed=armed;sw.row.classList.toggle("armed",armed)}
+  if(sw.lbl){sw.lbl.style.transition="none";sw.lbl.style.transform=armed?`translateX(${sw.w+sw.x+22}px)`:`translateX(calc(${sw.w+Math.min(sw.x,-96)/2}px - 50%))`}
 },{passive:true});
 /* open if pulled past half the button, or flicked: a quick swipe is enough (speed in px/ms, at least 20 px) */
 /* full swipe released: the row slides out, then the usual confirmation; Cancel brings the row back */
-function unfull(row){const fg=row.querySelector(":scope>.swipe-fg");if(fg)fg.style.transition="";row.classList.remove("full","armed");settle(row)}
-function endSwipe(){if(!sw)return;const s=sw;sw=null;s.row.classList.remove("dragging");if(s.lbl){s.lbl.style.transition="";s.lbl.style.transform=""}
-  if(s.dir==="h"&&s.armed){const row=s.row;slideTo(s.fg,s.w+(s.x??0),s.vx);row.classList.remove("open");if(swOpen===row)swOpen=null;row.classList.add("full");swSuppress=Date.now();
+function unfull(row){row.classList.remove("full");resetRow(row)}
+function endSwipe(){if(!sw)return;const s=sw;sw=null;s.row.classList.remove("dragging");
+  if(s.dir!=="h"){if(s.lbl){s.lbl.style.transition="";s.lbl.style.transform=""}return}
+  if(s.armed){const row=s.row;slideTo(s.fg,s.w+(s.x??0),s.vx,s.lbl);row.classList.remove("open");if(swOpen===row)swOpen=null;row.classList.add("full");swSuppress=Date.now();
     askDelete(row.dataset.kind,row.dataset.id,()=>unfull(row));if($("#modal").hidden&&row.classList.contains("full"))unfull(row);return}
-  if(s.dir==="h"){const x=s.x??s.base,dx=x-s.base,v=dx/Math.max(1,Date.now()-s.t0);
-  const open=Math.abs(dx)>=20&&Math.abs(v)>.11?v<0:x<-48;const ms=slideTo(s.fg,Math.abs((open?-96:0)-x),s.vx);if(!open)settle(s.row,ms);s.row.classList.remove("armed");s.row.classList.toggle("open",open);
-  if(open){if(swOpen&&swOpen!==s.row){closeSwipe()}swOpen=s.row}else if(swOpen===s.row)swOpen=null;swSuppress=Date.now()}}
-document.addEventListener("pointerup",endSwipe);document.addEventListener("pointercancel",endSwipe);
+  const x=s.x??s.base,dx=x-s.base,v=dx/Math.max(1,Date.now()-s.t0);
+  const open=Math.abs(dx)>=20&&Math.abs(v)>.11?v<0:x<-48;const ms=slideTo(s.fg,Math.abs((open?-96:0)-x),s.vx,s.lbl);if(!open)settle(s.row,ms);s.row.classList.remove("armed");s.row.classList.toggle("open",open);
+  if(open){if(swOpen&&swOpen!==s.row)closeSwipe();swOpen=s.row}else if(swOpen===s.row)swOpen=null;swSuppress=Date.now()}
+/* touchend / touchcancel as a safety net: endSwipe runs once (sw is cleared on entry) */
+["pointerup","pointercancel","touchend","touchcancel"].forEach(t=>document.addEventListener(t,endSwipe,{passive:true}));
 document.addEventListener("click",ev=>{
   if(Date.now()-swSuppress<350&&!ev.target.closest(".swipe-del")){ev.preventDefault();ev.stopPropagation();return}
   const fg=ev.target.closest(".swipe-fg");if(fg&&fg.parentElement.classList.contains("open")){ev.preventDefault();ev.stopPropagation();closeSwipe()}
