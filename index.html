@@ -734,7 +734,16 @@ function go(tab){
   if(tab===ui.tab&&!ui.editRoutine&&!ui.editEx){window.scrollTo({top:0,behavior:RM.matches?"auto":"smooth"});return}
   const changed=tab!==ui.tab;ui.tab=tab;ui.editRoutine=null;ui.editEx=null;saveUI();try{if(location.hash!=="#"+tab)window.history.replaceState(null,"","#"+tab)}catch(e){}
   const from=+getComputedStyle(main).opacity;render();window.scrollTo(0,0);
-  if(changed&&main.animate){main.getAnimations().forEach(a=>a.cancel());main.animate([{opacity:Math.min(from,.4)},{opacity:1}],{duration:150,easing:"ease-out"})}}
+  if(!changed){navAnim(-1);return}
+  if(main.animate){main.getAnimations().forEach(a=>a.cancel());main.animate([{opacity:Math.min(from,.4)},{opacity:1}],{duration:150,easing:"ease-out"})}}
+/* Progrès: the card that holds the curve (first card of the stack) */
+const chartCard=()=>main.querySelector(".stack>.card");
+/* opening a routine / exercise slides in lightly from the right, going back from the left (iOS push / pop, 16 px = the side margin, so nothing overflows the screen) */
+function navAnim(dir){if(!main.animate)return;main.getAnimations().forEach(a=>a.cancel());
+  main.animate(RM.matches?[{opacity:.4},{opacity:1}]:[{opacity:.4,transform:`translateX(${dir*16}px)`},{opacity:1,transform:"none"}],{duration:220,easing:"cubic-bezier(.32,.72,0,1)"})}
+/* something that just appeared after an action: fade in, from dy px above (opacity only with reduced motion) */
+function enter(el,dy,delay,dur){if(!el||!el.animate)return;
+  el.animate(RM.matches||!dy?[{opacity:0},{opacity:1}]:[{opacity:0,transform:`translateY(${dy}px)`},{opacity:1,transform:"none"}],{duration:dur||200,delay:delay||0,easing:"cubic-bezier(.23,1,.32,1)",fill:"backwards"})}
 /* segmented controls: render() rebuilds them, so the thumb's on-screen position is read just before and it slides from there (200 ms) */
 function segPositions(){const m={};main.querySelectorAll(".seg .thumb").forEach(t=>{m[t.parentElement.getAttribute("aria-label")]=t.getBoundingClientRect().left-t.parentElement.getBoundingClientRect().left});return m}
 function paintSegs(prev){main.querySelectorAll(".seg").forEach(seg=>{const bs=[...seg.querySelectorAll("button")];const i=bs.findIndex(b=>b.getAttribute("aria-pressed")==="true");if(i<0)return;
@@ -758,7 +767,7 @@ function vBilan(){
     const cls=it.verdict||it.j;const lab=it.verdict==="up"?"Level up":it.verdict==="down"?"Régression":it.j==="top"?"Haut atteint · 1/2":it.j==="fail"?"Bas manqué · 1/2":"Dans la fourchette";
     const why=it.verdict?(it.auto?`${esc(it.from)} → <b>${esc(it.to)}</b> à la prochaine séance`:esc(it.msg)):"";
     return `<div class="bl-row"><span class="nm">${esc(it.name)}</span><span class="verdict ${cls}">${lab}</span>${why?`<span class="why">${why}</span>`:""}</div>`}).join("");
-  return `<div class="card"><div class="card-head"><h3>Bilan de la séance</h3><button class="link" data-act="close-bilan">Fermer</button></div>
+  return `<div class="card bilan"><div class="card-head"><h3>Bilan de la séance</h3><button class="link" data-act="close-bilan">Fermer</button></div>
     <p class="muted" style="font-size:13px;margin:4px 0 6px">${esc(rName(b.routine))} · règle des 2 séances consécutives</p>${rows}</div>`;
 }
 function vRecord(){
@@ -887,6 +896,8 @@ function finishSession(){
   const ups=res.items.filter(i=>i.verdict==="up").length;
   toast(ups?`Séance enregistrée · ${ups} level up !`:`Séance enregistrée : ${n} série${n>1?"s":""}.`);
   render();window.scrollTo(0,0);
+  /* the session summary arrives once, its lines one after the other (later renders do not replay it) */
+  const bc=main.querySelector(".bilan");enter(bc,0,0,200);if(bc)bc.querySelectorAll(".bl-row").forEach((r,i)=>enter(r,6,60+40*i,200));
 }
 
 /* ===== rest timer (rest after a set, or after a full superset round) ===== */
@@ -1324,6 +1335,9 @@ document.addEventListener("click",ev=>{
 function flipKeys(){const m=new Map();
   [...main.children].forEach((el,i)=>m.set("m"+i+"|"+el.tagName+"|"+el.className,{el,top:el.getBoundingClientRect().top}));
   main.querySelectorAll(".swipe[data-kind]").forEach(el=>m.set("s"+el.dataset.kind+"|"+el.dataset.id,{el,top:el.getBoundingClientRect().top-el.parentElement.getBoundingClientRect().top}));
+  /* cards of a .stack (live session): an exercise card by its name, any other card by its rank from the end (stable when a card above goes) */
+  main.querySelectorAll(".stack").forEach(st=>{const kids=[...st.children],p=st.getBoundingClientRect().top;kids.forEach((el,i)=>{const nm=el.querySelector(".exname");
+    m.set("c"+el.className+"|"+(nm?nm.textContent:"#"+(kids.length-i)),{el,top:el.getBoundingClientRect().top-p})})});
   return m}
 function flip(mutate,remap){if(RM.matches){mutate();return}
   const before=flipKeys();mutate();
@@ -1411,15 +1425,20 @@ document.addEventListener("click",async ev=>{
     if(v>3||back){const ex=draft.exercises;for(let i=ex.length-1;i>=0;i--)if(ex[i].mode==="kick"){const nx=ex[i+1];if(nx&&nx.link&&!ex[i].link)nx.link=false;ex.splice(i,1)}if(ex[0])ex[0].link=false;
       draft.guard=`Kick-ups retirés aujourd'hui : poignets à ${v}/10${back?", douleur revenue le lendemain":""}. Handstand au mur uniquement.`}
     saveDraft();render();window.scrollTo(0,0)}
-  else if(a==="add-set"){const e=draft.exercises[+b.dataset.ei];const p=e.sets[e.sets.length-1];e.sets.push(Object.assign({},p,{done:false}));saveDraft();render()}
-  else if(a==="rm-set"){const e=draft.exercises[+b.dataset.ei];if(e.sets.length>1)e.sets.pop();saveDraft();render()}
-  else if(a==="rm-ex"){const i=+b.dataset.ei;const ex=draft.exercises;const nx=ex[i+1];if(nx&&nx.link&&!ex[i].link)nx.link=false;ex.splice(i,1);if(ex[0])ex[0].link=false;saveDraft();render()}
+  else if(a==="add-set"){const ei=+b.dataset.ei;const e=draft.exercises[ei];const p=e.sets[e.sets.length-1];e.sets.push(Object.assign({},p,{done:false}));saveDraft();render();
+    enter(main.querySelector(`.set[data-ei="${ei}"][data-si="${e.sets.length-1}"]`),-6)}
+  /* a removed set or exercise fades, then what is below closes up (same as a swipe deletion); the exercise is found again
+     by reference when the fade ends, so two quick taps can never remove the wrong one */
+  else if(a==="rm-set"){const ei=+b.dataset.ei;const e=draft.exercises[ei];if(e.sets.length<2)return;
+    removeRow(main.querySelector(`.set[data-ei="${ei}"][data-si="${e.sets.length-1}"]`),()=>{if(!draft||e.sets.length<2)return;e.sets.pop();saveDraft();render()})}
+  else if(a==="rm-ex"){const tgt=draft.exercises[+b.dataset.ei];if(!tgt)return;
+    removeRow(b.closest(".member")||b.closest(".card"),()=>{if(!draft)return;const ex=draft.exercises;const i=ex.indexOf(tgt);if(i<0)return;const nx=ex[i+1];if(nx&&nx.link&&!ex[i].link)nx.link=false;ex.splice(i,1);if(ex[0])ex[0].link=false;saveDraft();render()})}
   else if(a==="finish")finishSession();
   else if(a==="cancel")confirmBox("Abandonner la séance ?","Rien ne sera enregistré. Cette action est irréversible.","Abandonner",()=>{draft=null;saveDraft();stopTimer();keepAwake(false);render();window.scrollTo(0,0)});
   /* routines */
-  else if(a==="edit-r"){ui.editRoutine=b.dataset.id;render();window.scrollTo(0,0)}
-  else if(a==="back-r"){const r=S.routines.find(x=>x.id===ui.editRoutine);if(r&&r.items[0])r.items[0].link=false;ui.editRoutine=null;save();render();window.scrollTo(0,0)}
-  else if(a==="new-r"){const r={id:uid(),name:"",items:[]};S.routines.push(r);r.items.push(newItem());save();ui.editRoutine=r.id;render();window.scrollTo(0,0);setTimeout(()=>{const i=$("#rname");i&&i.focus()},60)}
+  else if(a==="edit-r"){ui.editRoutine=b.dataset.id;render();window.scrollTo(0,0);navAnim(1)}
+  else if(a==="back-r"){const r=S.routines.find(x=>x.id===ui.editRoutine);if(r&&r.items[0])r.items[0].link=false;ui.editRoutine=null;save();render();window.scrollTo(0,0);navAnim(-1)}
+  else if(a==="new-r"){const r={id:uid(),name:"",items:[]};S.routines.push(r);r.items.push(newItem());save();ui.editRoutine=r.id;render();window.scrollTo(0,0);navAnim(1);setTimeout(()=>{const i=$("#rname");i&&i.focus()},60)}
   else if(a==="restore-r"){const d=defaultData();const have=new Set(S.routines.map(r=>r.name));const names=new Map(S.exercises.map(e=>[norm(e.name),e]));
     const idMap={};d.exercises.forEach(e=>{const ex=names.get(norm(e.name));if(ex)idMap[e.id]=ex.id;else{S.exercises.push(e);idMap[e.id]=e.id}});
     const add=d.routines.filter(r=>!have.has(r.name));add.forEach(r=>{r.items.forEach(i=>{i.ex=idMap[i.ex]});S.routines.push(r)});save();render();
@@ -1432,16 +1451,17 @@ document.addEventListener("click",async ev=>{
   else if(a==="pick-ex"){assignEx(b.dataset.kind,b.dataset.item,b.dataset.id)}
   else if(a==="create-ex"){const name=b.dataset.name;if(!name)return;const ex=E(name,{todo:true});S.exercises.push(ex);save();assignEx(b.dataset.kind,b.dataset.item,ex.id);toast(`« ${name} » ajouté. Complète sa fiche dans Exercices.`)}
   /* exercises */
-  else if(a==="edit-ex"){ui.editEx=b.dataset.id;render();window.scrollTo(0,0)}
-  else if(a==="back-ex"){ui.editEx=null;save();render();window.scrollTo(0,0)}
-  else if(a==="new-ex"){const ex=E("",{todo:true});S.exercises.push(ex);save();ui.editEx=ex.id;render();window.scrollTo(0,0);setTimeout(()=>{const i=$("#xname");i&&i.focus()},60)}
+  else if(a==="edit-ex"){ui.editEx=b.dataset.id;render();window.scrollTo(0,0);navAnim(1)}
+  else if(a==="back-ex"){ui.editEx=null;save();render();window.scrollTo(0,0);navAnim(-1)}
+  else if(a==="new-ex"){const ex=E("",{todo:true});S.exercises.push(ex);save();ui.editEx=ex.id;render();window.scrollTo(0,0);navAnim(1);setTimeout(()=>{const i=$("#xname");i&&i.focus()},60)}
   else if(a==="ex-mode"){const ex=exById(ui.editEx);if(!ex)return;ex.mode=b.dataset.v;
     if(ex.mode==="kick"){ex.load=false;ex.uni=false;ex.prog="aucun"}if(ex.mode!=="sec"&&ex.prog==="duree")ex.prog="signal";if(ex.mode!=="reps")ex.uni=false;exChanged(ex,true);render()}
   else if(a==="step-add"){const ex=exById(ui.editEx);if(!ex)return;ex.steps.push({n:"",lo:null,hi:null});exChanged(ex,false);render();setTimeout(()=>{const ins=document.querySelectorAll('[data-sf="n"]');const i=ins[ins.length-1];i&&i.focus()},60)}
   /* progress & history */
-  else if(a==="period"){ui.period=+b.dataset.p;saveUI();render()}
+  else if(a==="period"){ui.period=+b.dataset.p;saveUI();render();enter(chartCard(),0,0,150)}
   else if(a==="mprev"||a==="mnext"){const d=parseISO(ui.calMonth);d.setMonth(d.getMonth()+(a==="mnext"?1:-1));ui.calMonth=iso(d);ui.calDay=null;render()}
-  else if(a==="day"){ui.calDay=b.dataset.d;render();const h=$("#dayTitle");h&&h.scrollIntoView({behavior:"smooth",block:"start"})}
+  else if(a==="day"){ui.calDay=b.dataset.d;render();const h=$("#dayTitle");h&&h.scrollIntoView({behavior:"smooth",block:"start"});
+    for(let el=h;el;el=el.nextElementSibling)enter(el,0,0,150)}
   else if(a==="export")doExport("json");
   else if(a==="export-csv")doExport("csv");
   else if(a==="copy"){const t=$("#dump");try{await navigator.clipboard.writeText(t.value);toast("Copié.")}catch(e){t.focus();t.select()}}
@@ -1467,7 +1487,7 @@ document.addEventListener("input",ev=>{
 });
 document.addEventListener("change",ev=>{
   const t=ev.target;
-  if(t.id==="exoPick"){ui.exo=t.value;saveUI();render();return}
+  if(t.id==="exoPick"){ui.exo=t.value;saveUI();render();enter(chartCard(),0,0,150);return}
   if(t.id==="importFile"&&t.files&&t.files[0]){const r=new FileReader();r.onload=()=>handleImport(String(r.result));r.readAsText(t.files[0]);return}
   if(t.matches(".set input")&&draft){const row=t.closest(".set");const e=draft.exercises[+row.dataset.ei];const s=e.sets[+row.dataset.si];const f=t.dataset.f;
     const nv=numOrNull(t.value);const v=nv==null?0:Math.max(0,r2(nv));const old=+s[f]||0;
