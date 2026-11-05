@@ -53,6 +53,10 @@
 img{max-width:100%}
 /* manipulation: no double-tap zoom when tapping +/− fast (pinch zoom stays); no font inflation in landscape */
 html{touch-action:manipulation;-webkit-text-size-adjust:100%}
+/* nothing may widen the page: a screen sliding off to the right (edge swipe back) made iOS zoom out to fit it.
+   html hidden (goes to the viewport) so that body's clip stays on body and cuts at the screen edge */
+html{overflow-x:hidden}
+body{overflow-x:clip}
 html,body{background:var(--bg);color:var(--ink)}
 body{margin:0;font-family:var(--f-body);font-size:17px;line-height:1.35;letter-spacing:-.01em;
   padding-top:env(safe-area-inset-top,0px);
@@ -452,14 +456,14 @@ textarea.inp{min-height:110px;padding:10px 12px;line-height:1.4;resize:vertical}
 .link:active{opacity:.5;transition-duration:0ms}
 /* keyboard open: the fixed tab bar and rest timer would cover the field being typed in (the timer keeps running) */
 body.kb .tabbar,body.kb .timer{display:none}
-/* compact navigation bar: appears (fade) once the large title has scrolled under it, as in iOS; same material as the tab bar */
+/* compact bar, live session only: appears (fade) once the session title has scrolled under it; session clock on the left, name centred */
 .navbar{position:fixed;top:0;left:0;right:0;z-index:25;padding-top:env(safe-area-inset-top,0px);background:var(--bar);
   -webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);border-bottom:.5px solid var(--line);
   opacity:0;pointer-events:none;transition:opacity 150ms ease-out}
 .navbar.on{opacity:1;pointer-events:auto}
 .navbar .in{max-width:560px;margin:0 auto;height:44px;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:8px;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-.nav-back{justify-self:start;grid-column:1;white-space:nowrap;font-size:17px;font-weight:400}
+.nav-clock{justify-self:start;grid-column:1;white-space:nowrap;font-size:17px;font-weight:600;font-variant-numeric:tabular-nums}
 .nav-title{grid-column:2;font-weight:600;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:min(60vw,320px);text-align:center}
 /* edge swipe back: the detail screen follows the finger, the list lies under it (parallax, slightly dimmed) */
 #main.edge-drag{position:relative;z-index:1;background:var(--bg);min-height:100vh;box-shadow:-10px 0 30px rgba(0,0,0,.18)}
@@ -508,7 +512,7 @@ body.kb .tabbar,body.kb .timer{display:none}
   </div>
 </div>
 
-<div class="navbar" id="navbar"><div class="in"><button class="link nav-back" id="navBack" hidden></button><span class="nav-title" id="navTitle" aria-hidden="true"></span></div></div>
+<div class="navbar" id="navbar"><div class="in"><span class="nav-clock num" id="navClock" aria-hidden="true"></span><span class="nav-title" id="navTitle" aria-hidden="true"></span></div></div>
 <nav class="tabbar" aria-label="Navigation"><div class="in" id="tabs"></div></nav>
 <div class="toast" id="toast" hidden></div>
 <div class="sheet" id="sheet" hidden><div class="scrim" id="sheetScrim"></div><div class="fill" id="sheetFill"></div><div class="in" id="sheetIn" role="dialog" aria-modal="true"></div></div>
@@ -775,12 +779,11 @@ function render(){
   main.innerHTML=v();paintThemeBtn();bindChart();paintSegs(segX);revealLvl();updNav();
 }
 /* compact nav bar: on once the bottom of the large title passes under it; back button only on a detail screen */
-const navbar=$("#navbar"),navTitle=$("#navTitle"),navBack=$("#navBack");
+const navbar=$("#navbar"),navTitle=$("#navTitle"),navClock=$("#navClock");
 function updNav(){
-  const det=ui.editRoutine?"r":ui.editEx?"ex":"";navBack.hidden=!det;
-  if(det){navBack.dataset.act=det==="r"?"back-r":"back-ex";navBack.textContent=det==="r"?"‹ Routines":"‹ Exercices"}
-  const h=main.querySelector("h1");const on=!!h&&h.getBoundingClientRect().bottom<navbar.getBoundingClientRect().bottom;
-  if(on)navTitle.textContent=h.textContent;navbar.classList.toggle("on",on);
+  const live=ui.tab==="enregistrer"&&draft&&!draft.check;const h=live&&main.querySelector("h1");
+  const on=!!h&&h.getBoundingClientRect().bottom<navbar.getBoundingClientRect().bottom;
+  if(on){navTitle.textContent=h.textContent;navClock.textContent=mmss((Date.now()-draft.startedAt)/1000)}navbar.classList.toggle("on",on);
 }
 let navRaf=0;["scroll","resize"].forEach(t=>window.addEventListener(t,()=>{if(!navRaf)navRaf=requestAnimationFrame(()=>{navRaf=0;updNav()})},{passive:true}));
 /* tab change: a short fade of the new content only (iOS switches tabs without a transition; no slide, nothing to wait for).
@@ -1013,7 +1016,7 @@ function onSetDone(ei,si){
   if(part.every(i=>draft.exercises[i].sets[si].done)){const last=draft.exercises[part[part.length-1]];const k=all.filter(b=>b.length>1).indexOf(bl);startTimer(last.rest||90,grpName(bl.length)+" "+LETTERS[k%10]+" · tour "+(si+1)+" fini")}
   else{const nxt=part.find(i=>!draft.exercises[i].sets[si].done&&i>ei)??part.find(i=>!draft.exercises[i].sets[si].done);startChain("→ "+draft.exercises[nxt].name)}
 }
-setInterval(()=>{showTimer();const c=document.getElementById("clock");if(c&&draft)c.textContent=mmss((Date.now()-draft.startedAt)/1000)},250);
+setInterval(()=>{showTimer();const c=document.getElementById("clock");if(c&&draft){c.textContent=mmss((Date.now()-draft.startedAt)/1000);if(navbar.classList.contains("on"))navClock.textContent=c.textContent}},250);
 $("#tMinus").addEventListener("click",()=>{stopAlarm();if(draft&&draft.timer&&draft.timer.kind==="rest"){draft.timer.end-=15000;saveDraft();showTimer()}});
 $("#tPlus").addEventListener("click",()=>{stopAlarm();if(draft&&draft.timer&&draft.timer.kind==="rest"){draft.timer.end+=15000;draft.timer.total+=15;overShown=false;saveDraft();showTimer()}});
 $("#tStop").addEventListener("click",stopTimer);
@@ -1028,8 +1031,7 @@ function vRoutines(){
     return swipeRow("routine",r.id,`<button class="lrow" data-act="edit-r" data-id="${r.id}"><span class="t"><b>${esc(rName(r.name))}</b><span class="sub">${r.items.length} exercice${r.items.length>1?"s":""}${nG?` · ${nG} superset${nG>1?"s":""}`:""}</span></span>${CHEV}</button>`)}).join("");
   return `<h1>Routines</h1><div class="stack">${list?`<div class="group">${list}</div>`:'<div class="card empty">Aucune routine pour l\'instant.</div>'}
     <p class="foot">Glisse une routine vers la gauche pour la supprimer.</p>
-    <button class="btn primary block" data-act="new-r">+ Nouvelle routine</button>
-    <button class="btn ghost block" data-act="restore-r">Ajouter les routines du programme</button></div>`;
+    <button class="btn primary block" data-act="new-r">+ Nouvelle routine</button></div>`;
 }
 function itemEditor(r,it,idx){
   const ex=exById(it.ex);
@@ -1315,13 +1317,13 @@ function backFrom(){
 }
 /* ================= edge swipe back (detail screens) =================
    A full-screen web app has no system back gesture: from the left edge (< 24 px) a drag to the right moves the detail
-   screen 1:1, with the list already drawn under it (parallax −30 % → 0, light dimming), like an iOS navigation stack.
+   screen 1:1, with the list already drawn under it (in place, lightly dimmed), like an iOS navigation stack.
    Release: speed projected forward (0.998); past half the width it completes at the finger's speed, otherwise it
    slides back. Touch events, so the vertical scroll can be refused before iOS starts it. */
 let eb=null,ebGhost=null;
 function ebX(){const t=getComputedStyle(main).transform;return !t||t==="none"?0:new DOMMatrix(t).m41}
 function ebPaint(x,w){main.style.transform=`translateX(${x}px)`;const p=clamp(x/w,0,1);
-  if(ebGhost){ebGhost.firstElementChild.style.transform=`translateX(${(-30*(1-p)).toFixed(2)}%)`;ebGhost.lastElementChild.style.opacity=String(.1*(1-p))}
+  if(ebGhost)ebGhost.lastElementChild.style.opacity=String(.1*(1-p));
   navbar.style.opacity=navbar.classList.contains("on")?String(1-p):""}
 function ebClean(){main.getAnimations().forEach(a=>a.cancel());main.style.transform="";main.classList.remove("edge-drag");navbar.style.opacity="";
   if(ebGhost){ebGhost.remove();ebGhost=null}}
@@ -1338,7 +1340,7 @@ document.addEventListener("touchstart",ev=>{
   const t=ev.touches[0];const x0=ebX();
   if(t.clientX>=24&&!(x0>.5&&t.clientX<x0+24)){eb=null;return}      /* from the edge, or from the edge of a screen still moving */
   eb={x0:t.clientX,y0:t.clientY,base:x0,on:false,x:x0,v:0,lx:t.clientX,lt:performance.now(),w:window.innerWidth};
-  if(x0>.5){main.getAnimations().forEach(a=>a.cancel());if(ebGhost)ebGhost.firstElementChild.getAnimations().concat(ebGhost.lastElementChild.getAnimations()).forEach(a=>a.cancel());
+  if(x0>.5){main.getAnimations().forEach(a=>a.cancel());if(ebGhost)ebGhost.lastElementChild.getAnimations().forEach(a=>a.cancel());
     eb.on=true;ebPaint(x0,eb.w)}
 },{passive:true});
 document.addEventListener("touchmove",ev=>{
@@ -1361,8 +1363,7 @@ function ebRelease(cancel){
   const ease=go?`cubic-bezier(.33,${clamp(v*ms/dist*.33,0,1).toFixed(3)},.67,1)`:"cubic-bezier(.32,.72,0,1)";
   const p0=clamp(s.x/w,0,1),p1=go?1:0;
   const a=main.animate([{transform:`translateX(${s.x}px)`},{transform:`translateX(${to}px)`}],{duration:ms,easing:ease,fill:"forwards"});
-  if(ebGhost){ebGhost.firstElementChild.animate([{transform:`translateX(${-30*(1-p0)}%)`},{transform:`translateX(${-30*(1-p1)}%)`}],{duration:ms,easing:ease,fill:"forwards"});
-    ebGhost.lastElementChild.animate([{opacity:.1*(1-p0)},{opacity:.1*(1-p1)}],{duration:ms,easing:ease,fill:"forwards"})}
+  if(ebGhost){ebGhost.lastElementChild.animate([{opacity:.1*(1-p0)},{opacity:.1*(1-p1)}],{duration:ms,easing:ease,fill:"forwards"})}
   main.style.transform="";
   a.finished.then(()=>{if(eb)return;ebClean();if(go)backFrom()},()=>{});
 }
@@ -1612,10 +1613,6 @@ document.addEventListener("click",async ev=>{
   else if(a==="edit-r"){ui.editRoutine=b.dataset.id;render();window.scrollTo(0,0);navAnim(1)}
   else if(a==="back-r"||a==="back-ex"){backFrom();navAnim(-1)}
   else if(a==="new-r"){const r={id:uid(),name:"",items:[]};S.routines.push(r);r.items.push(newItem());save();ui.editRoutine=r.id;render();window.scrollTo(0,0);navAnim(1);setTimeout(()=>{const i=$("#rname");i&&i.focus()},60)}
-  else if(a==="restore-r"){const d=defaultData();const have=new Set(S.routines.map(r=>r.name));const names=new Map(S.exercises.map(e=>[norm(e.name),e]));
-    const idMap={};d.exercises.forEach(e=>{const ex=names.get(norm(e.name));if(ex)idMap[e.id]=ex.id;else{S.exercises.push(e);idMap[e.id]=e.id}});
-    const add=d.routines.filter(r=>!have.has(r.name));add.forEach(r=>{r.items.forEach(i=>{i.ex=idMap[i.ex]});S.routines.push(r)});save();render();
-    toast(add.length?`${add.length} routine${add.length>1?"s":""} ajoutée${add.length>1?"s":""}.`:"Les routines du programme sont déjà là.")}
   else if(a==="it-add"){const r=S.routines.find(x=>x.id===ui.editRoutine);if(!r)return;const it=newItem();r.items.push(it);save();render();setTimeout(()=>{const i=document.querySelector(`.exsearch[data-item="${it.id}"]`);if(i){i.scrollIntoView({block:"center"});i.focus()}},60)}
   else if(a==="it-up"||a==="it-down"){const r=S.routines.find(x=>x.id===ui.editRoutine);if(!r)return;const i=r.items.findIndex(x=>x.id===b.dataset.item);const j=a==="it-up"?i-1:i+1;if(j<0||j>=r.items.length)return;
     [r.items[i],r.items[j]]=[r.items[j],r.items[i]];if(r.items[0])r.items[0].link=false;save();render()}
