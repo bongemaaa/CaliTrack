@@ -452,6 +452,19 @@ textarea.inp{min-height:110px;padding:10px 12px;line-height:1.4;resize:vertical}
 .link:active{opacity:.5;transition-duration:0ms}
 /* keyboard open: the fixed tab bar and rest timer would cover the field being typed in (the timer keeps running) */
 body.kb .tabbar,body.kb .timer{display:none}
+/* compact navigation bar: appears (fade) once the large title has scrolled under it, as in iOS; same material as the tab bar */
+.navbar{position:fixed;top:0;left:0;right:0;z-index:25;padding-top:env(safe-area-inset-top,0px);background:var(--bar);
+  -webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);border-bottom:.5px solid var(--line);
+  opacity:0;pointer-events:none;transition:opacity 150ms ease-out}
+.navbar.on{opacity:1;pointer-events:auto}
+.navbar .in{max-width:560px;margin:0 auto;height:44px;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:8px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.nav-back{justify-self:start;grid-column:1;white-space:nowrap;font-size:17px;font-weight:400}
+.nav-title{grid-column:2;font-weight:600;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:min(60vw,320px);text-align:center}
+/* edge swipe back: the detail screen follows the finger, the list lies under it (parallax, slightly dimmed) */
+#main.edge-drag{position:relative;z-index:1;background:var(--bg);min-height:100vh;box-shadow:-10px 0 30px rgba(0,0,0,.18)}
+.edge-ghost{position:fixed;z-index:0;overflow:hidden;pointer-events:none;background:var(--bg)}
+.edge-ghost .shade{position:absolute;inset:0;background:#000;opacity:.1}
 /* iOS materials: what floats above the content (alert, toast, rest timer) is a thick translucent layer that blurs
    what lies behind. The overdue timer stays solid blue (colour goes on a solid layer). Reduced transparency or
    increased contrast: back to the opaque colours. */
@@ -495,6 +508,7 @@ body.kb .tabbar,body.kb .timer{display:none}
   </div>
 </div>
 
+<div class="navbar" id="navbar"><div class="in"><button class="link nav-back" id="navBack" hidden></button><span class="nav-title" id="navTitle" aria-hidden="true"></span></div></div>
 <nav class="tabbar" aria-label="Navigation"><div class="in" id="tabs"></div></nav>
 <div class="toast" id="toast" hidden></div>
 <div class="sheet" id="sheet" hidden><div class="scrim" id="sheetScrim"></div><div class="fill" id="sheetFill"></div><div class="in" id="sheetIn" role="dialog" aria-modal="true"></div></div>
@@ -758,14 +772,23 @@ function render(){
   swOpen=null;renderTabs();
   const v={enregistrer:vRecord,routines:vRoutines,exercices:vExercises,progres:vProgress,historique:vHistory}[ui.tab]||vRecord;
   const segX=segPositions();
-  main.innerHTML=v();paintThemeBtn();bindChart();paintSegs(segX);revealLvl();
+  main.innerHTML=v();paintThemeBtn();bindChart();paintSegs(segX);revealLvl();updNav();
 }
+/* compact nav bar: on once the bottom of the large title passes under it; back button only on a detail screen */
+const navbar=$("#navbar"),navTitle=$("#navTitle"),navBack=$("#navBack");
+function updNav(){
+  const det=ui.editRoutine?"r":ui.editEx?"ex":"";navBack.hidden=!det;
+  if(det){navBack.dataset.act=det==="r"?"back-r":"back-ex";navBack.textContent=det==="r"?"‹ Routines":"‹ Exercices"}
+  const h=main.querySelector("h1");const on=!!h&&h.getBoundingClientRect().bottom<navbar.getBoundingClientRect().bottom;
+  if(on)navTitle.textContent=h.textContent;navbar.classList.toggle("on",on);
+}
+let navRaf=0;["scroll","resize"].forEach(t=>window.addEventListener(t,()=>{if(!navRaf)navRaf=requestAnimationFrame(()=>{navRaf=0;updNav()})},{passive:true}));
 /* tab change: a short fade of the new content only (iOS switches tabs without a transition; no slide, nothing to wait for).
    Tapping quickly fades from the current opacity, so it never blinks. Same tab with nothing to close: back to the top. */
 function go(tab){
   if(tab===ui.tab&&!ui.editRoutine&&!ui.editEx){window.scrollTo({top:0,behavior:RM.matches?"auto":"smooth"});return}
   const changed=tab!==ui.tab;ui.tab=tab;ui.editRoutine=null;ui.editEx=null;saveUI();try{if(location.hash!=="#"+tab)window.history.replaceState(null,"","#"+tab)}catch(e){}
-  const from=+getComputedStyle(main).opacity;render();window.scrollTo(0,0);
+  const from=+getComputedStyle(main).opacity;render();window.scrollTo(0,0);updNav();
   if(!changed){navAnim(-1);return}
   if(main.animate){main.getAnimations().forEach(a=>a.cancel());main.animate([{opacity:Math.min(from,.4)},{opacity:1}],{duration:150,easing:"ease-out"})}}
 /* Progrès: the card that holds the curve (first card of the stack) */
@@ -1284,6 +1307,67 @@ function openHist(name,exId){
 function blockBehind(ev){const sc=ev.target.closest&&ev.target.closest(".pcol,.sheet .in");if(sc&&sc.scrollHeight>sc.clientHeight+1)return;if(ev.cancelable)ev.preventDefault()}
 ["#sheet","#modal"].forEach(id=>$(id).addEventListener("touchmove",blockBehind,{passive:false}));
 function closeSheet(){hideEl($("#sheet"),260);pickCb=null}
+/* leave a routine / exercise detail for its list (back link, nav bar, edge swipe) */
+function backFrom(){
+  if(ui.editRoutine){const r=S.routines.find(x=>x.id===ui.editRoutine);if(r&&r.items[0])r.items[0].link=false;ui.editRoutine=null}
+  else ui.editEx=null;
+  save();render();window.scrollTo(0,0);updNav();
+}
+/* ================= edge swipe back (detail screens) =================
+   A full-screen web app has no system back gesture: from the left edge (< 24 px) a drag to the right moves the detail
+   screen 1:1, with the list already drawn under it (parallax −30 % → 0, light dimming), like an iOS navigation stack.
+   Release: speed projected forward (0.998); past half the width it completes at the finger's speed, otherwise it
+   slides back. Touch events, so the vertical scroll can be refused before iOS starts it. */
+let eb=null,ebGhost=null;
+function ebX(){const t=getComputedStyle(main).transform;return !t||t==="none"?0:new DOMMatrix(t).m41}
+function ebPaint(x,w){main.style.transform=`translateX(${x}px)`;const p=clamp(x/w,0,1);
+  if(ebGhost){ebGhost.firstElementChild.style.transform=`translateX(${(-30*(1-p)).toFixed(2)}%)`;ebGhost.lastElementChild.style.opacity=String(.1*(1-p))}
+  navbar.style.opacity=navbar.classList.contains("on")?String(1-p):""}
+function ebClean(){main.getAnimations().forEach(a=>a.cancel());main.style.transform="";main.classList.remove("edge-drag");navbar.style.opacity="";
+  if(ebGhost){ebGhost.remove();ebGhost=null}}
+function ebMakeGhost(){
+  if(ebGhost)return;const k=ui.editRoutine?"editRoutine":"editEx",keep=ui[k];ui[k]=null;
+  let html="";try{html=(k==="editRoutine"?vRoutines:vExercises)()}finally{ui[k]=keep}
+  const r=main.getBoundingClientRect(),top=r.top+window.scrollY;   /* where the list will sit once scrolled back to the top */
+  const g=document.createElement("div");g.className="edge-ghost";g.setAttribute("aria-hidden","true");g.inert=true;
+  g.style.cssText=`left:${r.left}px;width:${r.width}px;top:${top}px;bottom:0`;
+  g.innerHTML=`<div class="gin">${html.replace(/\sid="[^"]*"/g,"")}</div><div class="shade"></div>`;
+  document.body.appendChild(g);ebGhost=g}
+document.addEventListener("touchstart",ev=>{
+  if(!(ui.editRoutine||ui.editEx)||ev.touches.length>1||!$("#sheet").hidden||!$("#modal").hidden){eb=null;return}
+  const t=ev.touches[0];const x0=ebX();
+  if(t.clientX>=24&&!(x0>.5&&t.clientX<x0+24)){eb=null;return}      /* from the edge, or from the edge of a screen still moving */
+  eb={x0:t.clientX,y0:t.clientY,base:x0,on:false,x:x0,v:0,lx:t.clientX,lt:performance.now(),w:window.innerWidth};
+  if(x0>.5){main.getAnimations().forEach(a=>a.cancel());if(ebGhost)ebGhost.firstElementChild.getAnimations().concat(ebGhost.lastElementChild.getAnimations()).forEach(a=>a.cancel());
+    eb.on=true;ebPaint(x0,eb.w)}
+},{passive:true});
+document.addEventListener("touchmove",ev=>{
+  if(!eb)return;const t=ev.touches[0],dx=t.clientX-eb.x0,dy=t.clientY-eb.y0;
+  if(!eb.on){if(Math.abs(dx)<10&&Math.abs(dy)<10)return;
+    if(dx<=0||Math.abs(dy)>Math.abs(dx)){eb=null;return}
+    eb.on=true;if(sw){const r=sw.row;sw=null;r.classList.remove("dragging");resetRow(r)}
+    main.getAnimations().forEach(a=>a.cancel());main.classList.add("edge-drag");ebMakeGhost()}
+  if(ev.cancelable)ev.preventDefault();
+  const now=performance.now(),dt=now-eb.lt;if(dt>0){eb.v=.6*((t.clientX-eb.lx)/dt)+.4*eb.v;eb.lx=t.clientX;eb.lt=now}
+  eb.x=Math.max(0,eb.base+dx);ebPaint(eb.x,eb.w);
+},{passive:false});
+function ebRelease(cancel){
+  if(!eb)return;const s=eb;eb=null;if(!s.on)return;
+  const v=performance.now()-s.lt>80?0:s.v,proj=s.x+v*.998/(1-.998),w=s.w;
+  const go=!cancel&&s.x>0&&proj>w*.5&&v>-.05;
+  if(RM.matches){ebClean();if(go){backFrom();navAnim(-1)}return}
+  const to=go?w:0,dist=Math.max(1,Math.abs(to-s.x));
+  const ms=Math.round(clamp(go&&v>.05?dist/v*1.6:dist*1.1,160,go?320:340));
+  const ease=go?`cubic-bezier(.33,${clamp(v*ms/dist*.33,0,1).toFixed(3)},.67,1)`:"cubic-bezier(.32,.72,0,1)";
+  const p0=clamp(s.x/w,0,1),p1=go?1:0;
+  const a=main.animate([{transform:`translateX(${s.x}px)`},{transform:`translateX(${to}px)`}],{duration:ms,easing:ease,fill:"forwards"});
+  if(ebGhost){ebGhost.firstElementChild.animate([{transform:`translateX(${-30*(1-p0)}%)`},{transform:`translateX(${-30*(1-p1)}%)`}],{duration:ms,easing:ease,fill:"forwards"});
+    ebGhost.lastElementChild.animate([{opacity:.1*(1-p0)},{opacity:.1*(1-p1)}],{duration:ms,easing:ease,fill:"forwards"})}
+  main.style.transform="";
+  a.finished.then(()=>{if(eb)return;ebClean();if(go)backFrom()},()=>{});
+}
+document.addEventListener("touchend",()=>ebRelease(false),{passive:true});
+document.addEventListener("touchcancel",()=>ebRelease(true),{passive:true});
 /* ================= sheet: drag down to dismiss =================
    At the top of its content, a downward drag moves the sheet 1:1 (scrim fades with it), upward it resists (rubber band).
    Release: the finger's speed is projected forward (iOS deceleration, 0.998): past half the sheet's height it closes,
@@ -1526,7 +1610,7 @@ document.addEventListener("click",async ev=>{
   else if(a==="cancel")confirmBox("Abandonner la séance ?","Rien ne sera enregistré. Cette action est irréversible.","Abandonner",()=>{draft=null;saveDraft();stopTimer();keepAwake(false);render();window.scrollTo(0,0)});
   /* routines */
   else if(a==="edit-r"){ui.editRoutine=b.dataset.id;render();window.scrollTo(0,0);navAnim(1)}
-  else if(a==="back-r"){const r=S.routines.find(x=>x.id===ui.editRoutine);if(r&&r.items[0])r.items[0].link=false;ui.editRoutine=null;save();render();window.scrollTo(0,0);navAnim(-1)}
+  else if(a==="back-r"||a==="back-ex"){backFrom();navAnim(-1)}
   else if(a==="new-r"){const r={id:uid(),name:"",items:[]};S.routines.push(r);r.items.push(newItem());save();ui.editRoutine=r.id;render();window.scrollTo(0,0);navAnim(1);setTimeout(()=>{const i=$("#rname");i&&i.focus()},60)}
   else if(a==="restore-r"){const d=defaultData();const have=new Set(S.routines.map(r=>r.name));const names=new Map(S.exercises.map(e=>[norm(e.name),e]));
     const idMap={};d.exercises.forEach(e=>{const ex=names.get(norm(e.name));if(ex)idMap[e.id]=ex.id;else{S.exercises.push(e);idMap[e.id]=e.id}});
@@ -1541,7 +1625,6 @@ document.addEventListener("click",async ev=>{
   else if(a==="create-ex"){const name=b.dataset.name;if(!name)return;const ex=E(name,{todo:true});S.exercises.push(ex);save();assignEx(b.dataset.kind,b.dataset.item,ex.id);toast(`« ${name} » ajouté. Complète sa fiche dans Exercices.`)}
   /* exercises */
   else if(a==="edit-ex"){ui.editEx=b.dataset.id;render();window.scrollTo(0,0);navAnim(1)}
-  else if(a==="back-ex"){ui.editEx=null;save();render();window.scrollTo(0,0);navAnim(-1)}
   else if(a==="new-ex"){const ex=E("",{todo:true});S.exercises.push(ex);save();ui.editEx=ex.id;render();window.scrollTo(0,0);navAnim(1);setTimeout(()=>{const i=$("#xname");i&&i.focus()},60)}
   else if(a==="ex-mode"){const ex=exById(ui.editEx);if(!ex)return;ex.mode=b.dataset.v;
     if(ex.mode==="kick"){ex.load=false;ex.uni=false;ex.prog="aucun"}if(ex.mode!=="sec"&&ex.prog==="duree")ex.prog="signal";if(ex.mode!=="reps")ex.uni=false;exChanged(ex,true);render()}
@@ -1582,7 +1665,7 @@ document.addEventListener("change",ev=>{
     const nv=numOrNull(t.value);const v=nv==null?0:Math.max(0,r2(nv));const old=+s[f]||0;
     /* a typo (1255 kg for 125,5, 1000 reps) would become the record and pre-fill the next session: ask first */
     const hm=histMax(e.name,f);
-    if(hm>0&&v>3*hm&&v!==old){t.value=dec(old);askBox("Valeur inhabituelle",`${dec(v)} ${FUNIT[f]||""}, c'est plus de 3 fois ton maximum (${dec(hm)}). La garder ?`,"Garder",()=>{s[f]=v;saveDraft();const i=document.getElementById(t.id);if(i)i.value=dec(v)});return}
+    if(hm>0&&v>3*hm&&v!==old){t.value=dec(old);confirmBox("Valeur inhabituelle",`${dec(v)} ${FUNIT[f]||""}, c'est plus de 3 fois ton maximum (${dec(hm)}). La garder ?`,"Garder",()=>{s[f]=v;saveDraft();const i=document.getElementById(t.id);if(i)i.value=dec(v)});return}
     s[f]=v;t.value=dec(v);saveDraft();return}
   if(t.dataset.item&&t.dataset.f){const f=findItem(t.dataset.item);if(!f)return;const it=f.i;const k=t.dataset.f;
     if(k==="link"||k==="auto"){it[k]=t.checked;if(k==="auto"){it.since=Date.now();it.pending=null}save();if(k==="link")render();return}
