@@ -66,3 +66,7 @@ Avant une séance contenant des kick-ups ou un exercice marqué « Sollicite les
 2. `sw.js` sert la page en réseau d'abord (une nouvelle version de `index.html` apparaît sans toucher à `sw.js`), mais les autres fichiers en cache d'abord : si on modifie une icône, le manifeste ou la liste `FILES`, **incrémenter `CACHE`** dans `sw.js` (ex. `calitrack-v2` → `calitrack-v3`).
 3. Préserver la compatibilité des données `calitrack.v6` (voir Données).
 4. Rester dans le style iOS natif décrit plus haut ; interface en français.
+
+## Historique des modifications
+
+- **2026-11-02** (PR #2, #3, #4) — Audit iPhone/PWA et corrections : alarme de fin de repos en `<audio>` (WAV généré, en boucle jusqu'à ✕ / ±15 / série suivante / 60 s) avec session audio « playback », qui sonne en mode silencieux et met la musique en pause (la reprise automatique de la musique est impossible en web) ; `sw.js` sert la copie en cache si le réseau ne répond pas en 2,5 s ; alerte si l'enregistrement échoue, `storage.persist()`, rappel d'export dans Historique (date dans `calitrack.ui6`, format `calitrack.v6` inchangé) ; `touch-action: manipulation` (plus de zoom au double-tap sur +/−) et pas de sélection au appui long sur les contrôles ; barre d'onglets et minuteur masqués clavier ouvert ; page derrière une feuille ou une alerte bloquée au niveau du toucher (`touchmove`, pas de `position:fixed` sur `body`, qui figeait la roue de repos) ; `theme-color` suit le thème forcé ; `<title>` remis dans `<head>`, champ d'export de secours en 16 px.
