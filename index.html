@@ -376,7 +376,7 @@ textarea.dump{width:100%;min-height:140px;border:0;border-radius:10px;background
 .modal.closing>.scrim,.modal.closing .box{opacity:0;transition-duration:150ms}
 @starting-style{.modal>.scrim{opacity:0}.modal .box{opacity:0;transform:scale(1.08)}}
 .modal .box{background:var(--alert);border-radius:16px;width:100%;max-width:290px;text-align:center;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.3)}
-.modal h3{padding:18px 16px 4px;font-size:17px;font-weight:600}
+.modal h3{padding:18px 16px 4px;font-size:17px;font-weight:600;text-wrap:balance}
 .modal p{margin:0;padding:2px 16px 16px;font-size:13px;color:var(--muted)}
 .mbtns{display:grid;grid-template-columns:1fr 1fr;border-top:.5px solid var(--line)}
 .mbtns.one{grid-template-columns:1fr}
@@ -1340,12 +1340,14 @@ function sheetRelease(){
 sheetIn.addEventListener("touchend",sheetRelease,{passive:true});
 sheetIn.addEventListener("touchcancel",sheetRelease,{passive:true});
 let modalCb=null,modalCancelCb=null;
-function confirmBox(title,msg,okLabel,onOk,onCancel){$("#mTitle").textContent=title;$("#mMsg").textContent=msg;const b=$("#mBtns");b.className="mbtns";
+/* French punctuation: no line break before ? ! : ; » or after « (a lone "?" on the last line of an alert) */
+const nb=s=>String(s??"").replace(/ ([?!:;»])/g,"\u00A0$1").replace(/« /g,"«\u00A0");
+function confirmBox(title,msg,okLabel,onOk,onCancel){$("#mTitle").textContent=nb(title);$("#mMsg").textContent=nb(msg);const b=$("#mBtns");b.className="mbtns";
   b.innerHTML=`<button data-act="m-cancel">Annuler</button><button class="del" data-act="m-ok">${esc(okLabel||"Supprimer")}</button>`;modalCb=onOk;modalCancelCb=onCancel||null;showEl($("#modal"))}
 /* non-destructive yes / no question (same alert, no red button) */
-function askBox(title,msg,yes,onYes){$("#mTitle").textContent=title;$("#mMsg").textContent=msg;const b=$("#mBtns");b.className="mbtns";
+function askBox(title,msg,yes,onYes){$("#mTitle").textContent=nb(title);$("#mMsg").textContent=nb(msg);const b=$("#mBtns");b.className="mbtns";
   b.innerHTML=`<button data-act="m-cancel">Non</button><button data-act="m-ok" style="font-weight:600">${esc(yes)}</button>`;modalCb=onYes;modalCancelCb=null;showEl($("#modal"))}
-function alertBox(title,msg){$("#mTitle").textContent=title;$("#mMsg").textContent=msg;const b=$("#mBtns");b.className="mbtns one";b.innerHTML=`<button data-act="m-cancel">OK</button>`;modalCb=null;modalCancelCb=null;showEl($("#modal"))}
+function alertBox(title,msg){$("#mTitle").textContent=nb(title);$("#mMsg").textContent=nb(msg);const b=$("#mBtns");b.className="mbtns one";b.innerHTML=`<button data-act="m-cancel">OK</button>`;modalCb=null;modalCancelCb=null;showEl($("#modal"))}
 /* cancelled = Annuler, tap on the backdrop or Escape: runs the cancel callback (a fully swiped row slides back) */
 function closeModal(cancelled){const c=cancelled?modalCancelCb:null;hideEl($("#modal"),170);modalCb=null;modalCancelCb=null;c&&c()}
 let pickCb=null;
@@ -1580,7 +1582,7 @@ document.addEventListener("change",ev=>{
     const nv=numOrNull(t.value);const v=nv==null?0:Math.max(0,r2(nv));const old=+s[f]||0;
     /* a typo (1255 kg for 125,5, 1000 reps) would become the record and pre-fill the next session: ask first */
     const hm=histMax(e.name,f);
-    if(hm>0&&v>3*hm&&v!==old){t.value=dec(old);confirmBox("Valeur inhabituelle",`${dec(v)} ${FUNIT[f]||""}, c'est plus de 3 fois ton maximum (${dec(hm)}). La garder ?`,"Garder",()=>{s[f]=v;saveDraft();const i=document.getElementById(t.id);if(i)i.value=dec(v)});return}
+    if(hm>0&&v>3*hm&&v!==old){t.value=dec(old);askBox("Valeur inhabituelle",`${dec(v)} ${FUNIT[f]||""}, c'est plus de 3 fois ton maximum (${dec(hm)}). La garder ?`,"Garder",()=>{s[f]=v;saveDraft();const i=document.getElementById(t.id);if(i)i.value=dec(v)});return}
     s[f]=v;t.value=dec(v);saveDraft();return}
   if(t.dataset.item&&t.dataset.f){const f=findItem(t.dataset.item);if(!f)return;const it=f.i;const k=t.dataset.f;
     if(k==="link"||k==="auto"){it[k]=t.checked;if(k==="auto"){it.since=Date.now();it.pending=null}save();if(k==="link")render();return}
