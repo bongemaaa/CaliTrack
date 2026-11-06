@@ -25,7 +25,7 @@
   --float:#1C1C1E; --float-ink:#F5F5F7; --float-shadow:0 10px 30px rgba(0,0,0,.22);
   --sheet:var(--bg); --sheet-card:var(--card); --alert:var(--card); --press:rgba(120,120,128,.16);
   /* materials (translucent, blurred): alert, toast + rest timer, "chain" timer */
-  --alert-mat:rgba(242,242,247,.8); --edge-dim:.1; --edge-line:transparent; --float-mat:rgba(28,28,30,.8); --card-mat:rgba(255,255,255,.8); --mat-blur:saturate(180%) blur(30px);
+  --alert-mat:rgba(242,242,247,.8); --edge-dim:0; --edge-line:rgba(0,0,0,.15); --float-mat:rgba(28,28,30,.8); --card-mat:rgba(255,255,255,.8); --mat-blur:saturate(180%) blur(30px);
   --ease-out:cubic-bezier(.23,1,.32,1); --ease-in-out:cubic-bezier(.77,0,.175,1); --ease-drawer:cubic-bezier(.32,.72,0,1);
   --f-display:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Helvetica Neue","Segoe UI",Roboto,Arial,sans-serif;
   --f-body:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue","Segoe UI",Roboto,Arial,sans-serif;
@@ -467,8 +467,8 @@ body.kb .tabbar,body.kb .timer{display:none}
 .nav-title{grid-column:2;font-weight:600;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:min(60vw,320px);text-align:center}
 /* edge swipe back: the detail screen follows the finger, the list lies under it (parallax, slightly dimmed) */
 /* the sliding screen takes its side margins with it (they are on body): its content stays 16 px off its moving edge,
-   at the same place on screen as before the gesture. Edge made visible: shadow, a light hairline in dark mode, list dimmed */
-#main.edge-drag{position:relative;z-index:1;background:var(--bg);min-height:100vh;box-shadow:-.5px 0 0 var(--edge-line),-10px 0 30px rgba(0,0,0,.18);
+   at the same place on screen as before the gesture. Edge: a hairline (no drop shadow); in dark mode the list is also dimmed */
+#main.edge-drag{position:relative;z-index:1;background:var(--bg);min-height:100vh;box-shadow:-.5px 0 0 var(--edge-line);
   margin-left:calc(-1 * max(16px,env(safe-area-inset-left,0px)));padding-left:max(16px,env(safe-area-inset-left,0px));
   margin-right:calc(-1 * max(16px,env(safe-area-inset-right,0px)));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .edge-ghost{position:fixed;z-index:0;overflow:hidden;pointer-events:none;background:var(--bg)}
@@ -1338,7 +1338,7 @@ function ebMakeGhost(){
   const g=document.createElement("div");g.className="edge-ghost";g.setAttribute("aria-hidden","true");g.inert=true;
   g.style.cssText=`left:${r.left}px;width:${r.width}px;top:${top}px;bottom:0`;
   g.innerHTML=`<div class="gin">${html.replace(/\sid="[^"]*"/g,"")}</div><div class="shade"></div>`;
-  document.body.appendChild(g);g._dim=parseFloat(getComputedStyle(g.lastElementChild).opacity)||.1;ebGhost=g}
+  document.body.appendChild(g);{const o=parseFloat(getComputedStyle(g.lastElementChild).opacity);g._dim=isNaN(o)?.1:o}ebGhost=g}
 document.addEventListener("touchstart",ev=>{
   if(!(ui.editRoutine||ui.editEx)||ev.touches.length>1||!$("#sheet").hidden||!$("#modal").hidden){eb=null;return}
   const t=ev.touches[0];const x0=ebX();
