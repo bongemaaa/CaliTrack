@@ -25,7 +25,7 @@
   --float:#1C1C1E; --float-ink:#F5F5F7; --float-shadow:0 10px 30px rgba(0,0,0,.22);
   --sheet:var(--bg); --sheet-card:var(--card); --alert:var(--card); --press:rgba(120,120,128,.16);
   /* materials (translucent, blurred): alert, toast + rest timer, "chain" timer */
-  --alert-mat:rgba(242,242,247,.8); --float-mat:rgba(28,28,30,.8); --card-mat:rgba(255,255,255,.8); --mat-blur:saturate(180%) blur(30px);
+  --alert-mat:rgba(242,242,247,.8); --edge-dim:.1; --edge-line:transparent; --float-mat:rgba(28,28,30,.8); --card-mat:rgba(255,255,255,.8); --mat-blur:saturate(180%) blur(30px);
   --ease-out:cubic-bezier(.23,1,.32,1); --ease-in-out:cubic-bezier(.77,0,.175,1); --ease-drawer:cubic-bezier(.32,.72,0,1);
   --f-display:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Helvetica Neue","Segoe UI",Roboto,Arial,sans-serif;
   --f-body:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue","Segoe UI",Roboto,Arial,sans-serif;
@@ -38,7 +38,7 @@
   --bar:rgba(22,22,24,.86); --scrim:rgba(0,0,0,.6);
   --float:#2C2C2E; --float-ink:#F5F5F7; --float-shadow:0 0 0 .5px rgba(255,255,255,.1),0 10px 30px rgba(0,0,0,.5);
   --sheet:#1C1C1E; --sheet-card:#2C2C2E; --alert:#2C2C2E; --press:rgba(120,120,128,.28);
-  --alert-mat:rgba(44,44,46,.78); --float-mat:rgba(44,44,46,.78); --card-mat:rgba(28,28,30,.8); color-scheme:dark}}
+  --alert-mat:rgba(44,44,46,.78); --edge-dim:.3; --edge-line:rgba(255,255,255,.12); --float-mat:rgba(44,44,46,.78); --card-mat:rgba(28,28,30,.8); color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#000000; --card:#1C1C1E; --ink:#F5F5F7; --muted:#9A9AA3; --line:#38383D; --track:#2C2C2E;
   --accent:#4C7BFF; --accent-ink:#FFFFFF; --accent-text:#7FA0FF; --accent-soft:#18233F;
@@ -46,7 +46,7 @@
   --bar:rgba(22,22,24,.86); --scrim:rgba(0,0,0,.6);
   --float:#2C2C2E; --float-ink:#F5F5F7; --float-shadow:0 0 0 .5px rgba(255,255,255,.1),0 10px 30px rgba(0,0,0,.5);
   --sheet:#1C1C1E; --sheet-card:#2C2C2E; --alert:#2C2C2E; --press:rgba(120,120,128,.28);
-  --alert-mat:rgba(44,44,46,.78); --float-mat:rgba(44,44,46,.78); --card-mat:rgba(28,28,30,.8); color-scheme:dark}
+  --alert-mat:rgba(44,44,46,.78); --edge-dim:.3; --edge-line:rgba(255,255,255,.12); --float-mat:rgba(44,44,46,.78); --card-mat:rgba(28,28,30,.8); color-scheme:dark}
 
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -466,9 +466,13 @@ body.kb .tabbar,body.kb .timer{display:none}
 .nav-clock{justify-self:start;grid-column:1;white-space:nowrap;font-size:17px;font-weight:600;font-variant-numeric:tabular-nums}
 .nav-title{grid-column:2;font-weight:600;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:min(60vw,320px);text-align:center}
 /* edge swipe back: the detail screen follows the finger, the list lies under it (parallax, slightly dimmed) */
-#main.edge-drag{position:relative;z-index:1;background:var(--bg);min-height:100vh;box-shadow:-10px 0 30px rgba(0,0,0,.18)}
+/* the sliding screen takes its side margins with it (they are on body): its content stays 16 px off its moving edge,
+   at the same place on screen as before the gesture. Edge made visible: shadow, a light hairline in dark mode, list dimmed */
+#main.edge-drag{position:relative;z-index:1;background:var(--bg);min-height:100vh;box-shadow:-.5px 0 0 var(--edge-line),-10px 0 30px rgba(0,0,0,.18);
+  margin-left:calc(-1 * max(16px,env(safe-area-inset-left,0px)));padding-left:max(16px,env(safe-area-inset-left,0px));
+  margin-right:calc(-1 * max(16px,env(safe-area-inset-right,0px)));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .edge-ghost{position:fixed;z-index:0;overflow:hidden;pointer-events:none;background:var(--bg)}
-.edge-ghost .shade{position:absolute;inset:0;background:#000;opacity:.1}
+.edge-ghost .shade{position:absolute;inset:0;background:#000;opacity:var(--edge-dim)}
 /* iOS materials: what floats above the content (alert, toast, rest timer) is a thick translucent layer that blurs
    what lies behind. The overdue timer stays solid blue (colour goes on a solid layer). Reduced transparency or
    increased contrast: back to the opaque colours. */
@@ -1323,7 +1327,7 @@ function backFrom(){
 let eb=null,ebGhost=null;
 function ebX(){const t=getComputedStyle(main).transform;return !t||t==="none"?0:new DOMMatrix(t).m41}
 function ebPaint(x,w){main.style.transform=`translateX(${x}px)`;const p=clamp(x/w,0,1);
-  if(ebGhost)ebGhost.lastElementChild.style.opacity=String(.1*(1-p));
+  if(ebGhost)ebGhost.lastElementChild.style.opacity=String(ebGhost._dim*(1-p));
   navbar.style.opacity=navbar.classList.contains("on")?String(1-p):""}
 function ebClean(){main.getAnimations().forEach(a=>a.cancel());main.style.transform="";main.classList.remove("edge-drag");navbar.style.opacity="";
   if(ebGhost){ebGhost.remove();ebGhost=null}}
@@ -1334,7 +1338,7 @@ function ebMakeGhost(){
   const g=document.createElement("div");g.className="edge-ghost";g.setAttribute("aria-hidden","true");g.inert=true;
   g.style.cssText=`left:${r.left}px;width:${r.width}px;top:${top}px;bottom:0`;
   g.innerHTML=`<div class="gin">${html.replace(/\sid="[^"]*"/g,"")}</div><div class="shade"></div>`;
-  document.body.appendChild(g);ebGhost=g}
+  document.body.appendChild(g);g._dim=parseFloat(getComputedStyle(g.lastElementChild).opacity)||.1;ebGhost=g}
 document.addEventListener("touchstart",ev=>{
   if(!(ui.editRoutine||ui.editEx)||ev.touches.length>1||!$("#sheet").hidden||!$("#modal").hidden){eb=null;return}
   const t=ev.touches[0];const x0=ebX();
@@ -1348,7 +1352,7 @@ document.addEventListener("touchmove",ev=>{
   if(!eb.on){if(Math.abs(dx)<10&&Math.abs(dy)<10)return;
     if(dx<=0||Math.abs(dy)>Math.abs(dx)){eb=null;return}
     eb.on=true;if(sw){const r=sw.row;sw=null;r.classList.remove("dragging");resetRow(r)}
-    main.getAnimations().forEach(a=>a.cancel());main.classList.add("edge-drag");ebMakeGhost()}
+    main.getAnimations().forEach(a=>a.cancel());ebMakeGhost();main.classList.add("edge-drag")}   /* ghost placed from #main before its margins widen */
   if(ev.cancelable)ev.preventDefault();
   const now=performance.now(),dt=now-eb.lt;if(dt>0){eb.v=.6*((t.clientX-eb.lx)/dt)+.4*eb.v;eb.lx=t.clientX;eb.lt=now}
   eb.x=Math.max(0,eb.base+dx);ebPaint(eb.x,eb.w);
@@ -1363,7 +1367,7 @@ function ebRelease(cancel){
   const ease=go?`cubic-bezier(.33,${clamp(v*ms/dist*.33,0,1).toFixed(3)},.67,1)`:"cubic-bezier(.32,.72,0,1)";
   const p0=clamp(s.x/w,0,1),p1=go?1:0;
   const a=main.animate([{transform:`translateX(${s.x}px)`},{transform:`translateX(${to}px)`}],{duration:ms,easing:ease,fill:"forwards"});
-  if(ebGhost){ebGhost.lastElementChild.animate([{opacity:.1*(1-p0)},{opacity:.1*(1-p1)}],{duration:ms,easing:ease,fill:"forwards"})}
+  if(ebGhost){ebGhost.lastElementChild.animate([{opacity:ebGhost._dim*(1-p0)},{opacity:ebGhost._dim*(1-p1)}],{duration:ms,easing:ease,fill:"forwards"})}
   main.style.transform="";
   a.finished.then(()=>{if(eb)return;ebClean();if(go)backFrom()},()=>{});
 }
