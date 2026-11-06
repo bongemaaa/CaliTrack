@@ -25,7 +25,7 @@
   --float:#1C1C1E; --float-ink:#F5F5F7; --float-shadow:0 10px 30px rgba(0,0,0,.22);
   --sheet:var(--bg); --sheet-card:var(--card); --alert:var(--card); --press:rgba(120,120,128,.16);
   /* materials (translucent, blurred): alert, toast + rest timer, "chain" timer */
-  --alert-mat:rgba(242,242,247,.8); --edge-dim:0; --edge-line:rgba(0,0,0,.15); --float-mat:rgba(28,28,30,.8); --card-mat:rgba(255,255,255,.8); --mat-blur:saturate(180%) blur(30px);
+  --alert-mat:rgba(242,242,247,.8); --edge-dim:0; --float-mat:rgba(28,28,30,.8); --card-mat:rgba(255,255,255,.8); --mat-blur:saturate(180%) blur(30px);
   --ease-out:cubic-bezier(.23,1,.32,1); --ease-in-out:cubic-bezier(.77,0,.175,1); --ease-drawer:cubic-bezier(.32,.72,0,1);
   --f-display:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Helvetica Neue","Segoe UI",Roboto,Arial,sans-serif;
   --f-body:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue","Segoe UI",Roboto,Arial,sans-serif;
@@ -38,7 +38,7 @@
   --bar:rgba(22,22,24,.86); --scrim:rgba(0,0,0,.6);
   --float:#2C2C2E; --float-ink:#F5F5F7; --float-shadow:0 0 0 .5px rgba(255,255,255,.1),0 10px 30px rgba(0,0,0,.5);
   --sheet:#1C1C1E; --sheet-card:#2C2C2E; --alert:#2C2C2E; --press:rgba(120,120,128,.28);
-  --alert-mat:rgba(44,44,46,.78); --edge-dim:.3; --edge-line:rgba(255,255,255,.12); --float-mat:rgba(44,44,46,.78); --card-mat:rgba(28,28,30,.8); color-scheme:dark}}
+  --alert-mat:rgba(44,44,46,.78); --edge-dim:.3; --float-mat:rgba(44,44,46,.78); --card-mat:rgba(28,28,30,.8); color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#000000; --card:#1C1C1E; --ink:#F5F5F7; --muted:#9A9AA3; --line:#38383D; --track:#2C2C2E;
   --accent:#4C7BFF; --accent-ink:#FFFFFF; --accent-text:#7FA0FF; --accent-soft:#18233F;
@@ -46,7 +46,7 @@
   --bar:rgba(22,22,24,.86); --scrim:rgba(0,0,0,.6);
   --float:#2C2C2E; --float-ink:#F5F5F7; --float-shadow:0 0 0 .5px rgba(255,255,255,.1),0 10px 30px rgba(0,0,0,.5);
   --sheet:#1C1C1E; --sheet-card:#2C2C2E; --alert:#2C2C2E; --press:rgba(120,120,128,.28);
-  --alert-mat:rgba(44,44,46,.78); --edge-dim:.3; --edge-line:rgba(255,255,255,.12); --float-mat:rgba(44,44,46,.78); --card-mat:rgba(28,28,30,.8); color-scheme:dark}
+  --alert-mat:rgba(44,44,46,.78); --edge-dim:.3; --float-mat:rgba(44,44,46,.78); --card-mat:rgba(28,28,30,.8); color-scheme:dark}
 
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -467,8 +467,8 @@ body.kb .tabbar,body.kb .timer{display:none}
 .nav-title{grid-column:2;font-weight:600;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:min(60vw,320px);text-align:center}
 /* edge swipe back: the detail screen follows the finger, the list lies under it (parallax, slightly dimmed) */
 /* the sliding screen takes its side margins with it (they are on body): its content stays 16 px off its moving edge,
-   at the same place on screen as before the gesture. Edge: a hairline (no drop shadow); in dark mode the list is also dimmed */
-#main.edge-drag{position:relative;z-index:1;background:var(--bg);min-height:100vh;box-shadow:-.5px 0 0 var(--edge-line);
+   at the same place on screen as before the gesture. No line or shadow on its edge (wanted: a seamless slide); in dark mode the list under it is dimmed */
+#main.edge-drag{position:relative;z-index:1;background:var(--bg);min-height:100vh;
   margin-left:calc(-1 * max(16px,env(safe-area-inset-left,0px)));padding-left:max(16px,env(safe-area-inset-left,0px));
   margin-right:calc(-1 * max(16px,env(safe-area-inset-right,0px)));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .edge-ghost{position:fixed;z-index:0;overflow:hidden;pointer-events:none;background:var(--bg)}
