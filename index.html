@@ -58,7 +58,7 @@ html{touch-action:manipulation;-webkit-text-size-adjust:100%}
 html{overflow-x:hidden}
 body{overflow-x:clip}
 html,body{background:var(--bg);color:var(--ink)}
-body{margin:0;font-family:var(--f-body);font-size:17px;line-height:1.35;letter-spacing:-.01em;
+body{margin:0;font-family:var(--f-body);font-size:calc(17px*var(--ts,1));line-height:1.35;
   padding-top:env(safe-area-inset-top,0px);
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
   -webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
@@ -75,17 +75,17 @@ button,.tab,.chip,.pcol div,.swipe-del{-webkit-user-select:none;user-select:none
 
 .app{max-width:560px;margin:0 auto;padding-block:4px 210px}
 .top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:8px 0}
-.brand{display:flex;align-items:center;gap:7px;font-weight:700;font-size:15px;letter-spacing:-.01em;color:var(--ink)}
+.brand{display:flex;align-items:center;gap:7px;font-weight:700;font-size:calc(15px*var(--ts,1));letter-spacing:-.01em;color:var(--ink)}
 .brand svg{width:22px;height:22px;color:var(--accent)}
 .iconbtn{width:36px;height:36px;border-radius:50%;border:0;background:var(--track);color:var(--ink);display:grid;place-items:center}
 .iconbtn svg{width:18px;height:18px}
-h1{font-family:var(--f-display);font-weight:700;font-size:34px;line-height:1.1;letter-spacing:-.025em;margin:6px 0 16px;text-wrap:balance;overflow-wrap:anywhere}
-h2{font-family:var(--f-display);font-weight:700;font-size:22px;line-height:1.15;letter-spacing:-.02em;margin:28px 0 10px;text-wrap:balance}
-h3{font-family:var(--f-display);font-weight:600;font-size:17px;line-height:1.25;margin:0;min-width:0;overflow-wrap:anywhere}
-.eyebrow{font-size:13px;font-weight:500;letter-spacing:.01em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--f-display);font-weight:700;font-size:calc(34px*var(--ts,1));line-height:1.1;letter-spacing:-.025em;margin:6px 0 16px;text-wrap:balance;overflow-wrap:anywhere}
+h2{font-family:var(--f-display);font-weight:700;font-size:calc(22px*var(--ts,1));line-height:1.15;letter-spacing:-.02em;margin:28px 0 10px;text-wrap:balance}
+h3{font-family:var(--f-display);font-weight:600;font-size:calc(17px*var(--ts,1));line-height:1.25;margin:0;min-width:0;overflow-wrap:anywhere}
+.eyebrow{font-size:calc(13px*var(--ts,1));font-weight:500;letter-spacing:.01em;text-transform:uppercase;color:var(--muted)}
 .eyebrow.sec{padding-left:16px}
 /* group footer (hints under a list): aligned with the text inside the cards */
-.foot{font-size:13px;color:var(--muted);margin:-4px 0 0;padding:0 16px}
+.foot{font-size:calc(13px*var(--ts,1));color:var(--muted);margin:-4px 0 0;padding:0 16px}
 .muted{color:var(--muted)}
 .stack{display:flex;flex-direction:column;gap:12px}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
@@ -97,72 +97,72 @@ h3{font-family:var(--f-display);font-weight:600;font-size:17px;line-height:1.25;
 .card.tap:active{transform:scale(.985)}
 .card.tap:active::after{opacity:1;transition-duration:0ms}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
-.chip{font-size:13px;padding:3px 9px;border-radius:7px;background:var(--track);color:var(--ink);white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.chip{font-size:calc(13px*var(--ts,1));padding:3px 9px;border-radius:7px;background:var(--track);color:var(--ink);white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .chip b{color:var(--accent-text);margin-right:4px;font-weight:700}
 .card-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
-.go{font-weight:600;color:var(--accent-text);font-size:15px;white-space:nowrap}
+.go{font-weight:600;color:var(--accent-text);font-size:calc(15px*var(--ts,1));white-space:nowrap}
 
-.btn{min-height:50px;padding:0 18px;border-radius:12px;border:0;background:var(--accent-soft);color:var(--accent-text);font-weight:600;font-size:17px}
+.btn{min-height:50px;padding:0 18px;border-radius:12px;border:0;background:var(--accent-soft);color:var(--accent-text);font-weight:600;font-size:calc(17px*var(--ts,1))}
 .btn.primary{background:var(--accent);color:var(--accent-ink)}
 .btn.block{width:100%}
 .btn.ghost{background:transparent;color:var(--accent-text)}
 .btn.danger{color:var(--bad);background:var(--bad-soft)}
 .btn.danger.armed{background:var(--bad);color:#fff}
-.btn.small{min-height:38px;padding:0 12px;font-size:15px;border-radius:10px}
+.btn.small{min-height:38px;padding:0 12px;font-size:calc(15px*var(--ts,1));border-radius:10px}
 /* iOS: highlight at once on press, fade back on release; full-width CTAs also sink a little */
 .btn{transition:opacity 200ms ease-out,transform 160ms var(--ease-out)}
 .btn:active{opacity:.7;transition-duration:0ms}
 .btn.block:active{transform:scale(.98)}
 .btn.quiet{background:transparent;color:var(--bad);margin-top:8px}
 .btn:disabled{opacity:.4}
-.link{background:none;border:0;padding:6px 0;color:var(--accent-text);font-weight:600;font-size:15px}
+.link{background:none;border:0;padding:6px 0;color:var(--accent-text);font-weight:600;font-size:calc(15px*var(--ts,1))}
 
-.banner{border:0;background:var(--accent-soft);color:var(--ink);border-radius:var(--r);padding:12px 16px;font-size:14px}
+.banner{border:0;background:var(--accent-soft);color:var(--ink);border-radius:var(--r);padding:12px 16px;font-size:calc(14px*var(--ts,1))}
 
 /* Tab bar */
 .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--bar);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);border-top:.5px solid var(--line);
   padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
 .tabbar .in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr)}
-.tab{background:none;border:0;padding:7px 2px 6px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;font-weight:500;letter-spacing:0;color:var(--muted);min-width:0}
+.tab{background:none;border:0;padding:7px 2px 6px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:calc(10px*var(--ts,1));font-weight:500;letter-spacing:0;color:var(--muted);min-width:0}
 .tab svg{width:26px;height:26px}
 .tab[aria-current="page"]{color:var(--accent)}
 .tab .ico{display:grid;place-items:center}
 
 /* Live session */
 .sess-head{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;margin-bottom:12px}
-.clock{font-weight:600;font-size:28px;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
-.ex .meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px;font-size:13px;color:var(--muted)}
+.clock{font-weight:600;font-size:calc(28px*var(--ts,1));font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.ex .meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px;font-size:calc(13px*var(--ts,1));color:var(--muted)}
 .tempo{display:inline-flex;align-items:baseline;gap:5px;background:var(--track);color:var(--ink);border-radius:6px;padding:2px 7px;font-weight:600}
-.tempo span{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
-.tempo b{font-weight:700;font-size:15px;letter-spacing:.02em;font-variant-numeric:tabular-nums}
-.tempo-help{font-size:12px;color:var(--muted);margin-top:4px}
-.uni-tag{font-size:11px;font-weight:700;letter-spacing:.04em;border-radius:6px;padding:2px 6px;background:var(--track);color:var(--ink)}
-.ex .note{font-size:13px;margin-top:6px;color:var(--ink);overflow-wrap:anywhere;cursor:pointer}
+.tempo span{font-size:calc(10px*var(--ts,1));letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.tempo b{font-weight:700;font-size:calc(15px*var(--ts,1));letter-spacing:.02em;font-variant-numeric:tabular-nums}
+.tempo-help{font-size:calc(12px*var(--ts,1));color:var(--muted);margin-top:4px}
+.uni-tag{font-size:calc(11px*var(--ts,1));font-weight:700;letter-spacing:.04em;border-radius:6px;padding:2px 6px;background:var(--track);color:var(--ink)}
+.ex .note{font-size:calc(13px*var(--ts,1));margin-top:6px;color:var(--ink);overflow-wrap:anywhere;cursor:pointer}
 .ex .note.clamp{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-.ex .last{font-size:13px;margin-top:6px;color:var(--accent-text);font-weight:500;overflow-wrap:anywhere}
-.streak{font-size:12px;font-weight:600;border-radius:99px;padding:2px 9px}
+.ex .last{font-size:calc(13px*var(--ts,1));margin-top:6px;color:var(--accent-text);font-weight:500;overflow-wrap:anywhere}
+.streak{font-size:calc(12px*var(--ts,1));font-weight:600;border-radius:99px;padding:2px 9px}
 .streak.up{background:var(--good-soft);color:var(--good)}
 .streak.down{background:var(--bad-soft);color:var(--bad)}
 .lvl{margin-top:10px;border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:4px}
 .lvl.up{background:var(--accent);color:var(--accent-ink)}
 .lvl.down{background:var(--bad-soft);color:var(--bad)}
-.lvl .k{font-weight:700;font-size:17px;line-height:1.2}
-.lvl .d{font-size:14px;font-weight:500}
-.lvl .undo{align-self:flex-start;background:none;border:0;padding:4px 0;color:inherit;font-weight:600;font-size:14px;text-decoration:underline;text-underline-offset:3px}
+.lvl .k{font-weight:700;font-size:calc(17px*var(--ts,1));line-height:1.2}
+.lvl .d{font-size:calc(14px*var(--ts,1));font-weight:500}
+.lvl .undo{align-self:flex-start;background:none;border:0;padding:4px 0;color:inherit;font-weight:600;font-size:calc(14px*var(--ts,1));text-decoration:underline;text-underline-offset:3px}
 .sets{display:flex;flex-direction:column;gap:8px;margin-top:12px}
 .set{display:grid;grid-template-columns:20px minmax(0,1fr) minmax(0,1fr) 50px;gap:6px;align-items:center;min-width:0}
 .set.uni{grid-template-areas:"n g d ok" "n k k ok";grid-template-rows:50px 50px}
 .set.uni .n{grid-area:n}.set.uni .sg{grid-area:g}.set.uni .sd{grid-area:d}.set.uni .sk{grid-area:k}.set.uni .done{grid-area:ok;height:100%}
-.set .n{font-weight:600;font-size:15px;color:var(--muted);text-align:center;font-variant-numeric:tabular-nums}
+.set .n{font-weight:600;font-size:calc(15px*var(--ts,1));color:var(--muted);text-align:center;font-variant-numeric:tabular-nums}
 .step{display:grid;grid-template-columns:30px minmax(0,1fr) 30px;border-radius:10px;overflow:hidden;background:var(--track);height:50px;min-width:0;transition:background-color 200ms ease-out}
 /* −/+ targets: full 44 px when the stepper is alone on its row; 36 px on wide phones; 30 px kept only where two steppers share a row on a 375–413 pt screen (a value like 102,5 must still fit) */
 .set.c3 .step{grid-template-columns:44px minmax(0,1fr) 44px}
 @media (min-width:414px){.set:not(.c3) .step{grid-template-columns:36px minmax(0,1fr) 36px}}
-.step button{border:0;background:transparent;font-size:22px;font-weight:500;line-height:1;padding:0;color:var(--accent-text)}
+.step button{border:0;background:transparent;font-size:calc(22px*var(--ts,1));font-weight:500;line-height:1;padding:0;color:var(--accent-text)}
 .step button:active{background:var(--line)}
 .step .v{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0}
 .step input{width:100%;border:0;background:transparent;text-align:center;font-weight:700;font-size:clamp(16px,4.8vw,20px);padding:0;font-variant-numeric:tabular-nums;letter-spacing:-.02em;min-width:0}
-.step small{font-size:10px;color:var(--muted);line-height:1;margin-top:1px;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;font-weight:500}
+.step small{font-size:calc(10px*var(--ts,1));color:var(--muted);line-height:1;margin-top:1px;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;font-weight:500}
 .done{height:50px;border-radius:10px;border:0;background:var(--track);color:var(--muted);display:grid;place-items:center;
   transition:background-color 160ms ease-out,color 160ms ease-out,transform 160ms var(--ease-out)}
 .done:active{transform:scale(.94)}
@@ -175,34 +175,33 @@ h3{font-family:var(--f-display);font-weight:600;font-size:17px;line-height:1.25;
 .set-tools{display:flex;gap:8px;margin-top:10px}
 .set-tools .btn{flex:1}
 .scale{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
-.scale button{height:48px;border-radius:10px;border:0;background:var(--track);font-weight:700;font-size:19px;font-variant-numeric:tabular-nums}
+.scale button{height:48px;border-radius:10px;border:0;background:var(--track);font-weight:700;font-size:calc(19px*var(--ts,1));font-variant-numeric:tabular-nums}
 .scale button.hi{background:var(--bad-soft);color:var(--bad)}
-.guard{background:var(--bad-soft);color:var(--bad);border-radius:var(--r);padding:12px 16px;font-size:14px;font-weight:600}
+.guard{background:var(--bad-soft);color:var(--bad);border-radius:var(--r);padding:12px 16px;font-size:calc(14px*var(--ts,1));font-weight:600}
 
 /* Superset / triset block */
 .grp{padding:0;overflow:hidden}
 .grp-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px;padding:12px 16px;background:var(--accent-soft);color:var(--accent-text)}
-.grp-tag{font-weight:700;font-size:15px;letter-spacing:.02em;text-transform:uppercase}
-.grp-sub{font-size:13px;color:var(--ink);opacity:.75}
+.grp-tag{font-weight:700;font-size:calc(15px*var(--ts,1));letter-spacing:.02em;text-transform:uppercase}
+.grp-sub{font-size:calc(13px*var(--ts,1));color:var(--ink);opacity:.75}
 .member{padding:14px 16px}
 .member+.member{border-top:.5px solid var(--line)}
-.mlabel{font-weight:700;font-size:12px;background:var(--accent);color:var(--accent-ink);border-radius:5px;padding:2px 5px;margin-right:7px;vertical-align:2px;font-variant-numeric:tabular-nums}
+.mlabel{font-weight:700;font-size:calc(12px*var(--ts,1));background:var(--accent);color:var(--accent-ink);border-radius:5px;padding:2px 5px;margin-right:7px;vertical-align:2px;font-variant-numeric:tabular-nums}
 
 /* Rest timer */
 .timer{position:fixed;left:0;right:0;z-index:19;bottom:calc(58px + env(safe-area-inset-bottom,0px));
   padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px))}
 .timer .in{max-width:560px;margin:0 auto 8px;background:var(--float);color:var(--float-ink);border-radius:18px;padding:10px 10px 10px 16px;box-shadow:var(--float-shadow)}
-.timer .next{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;padding:0 4px 8px 0;margin-bottom:8px;border-bottom:.5px solid rgba(127,127,127,.4)}
+.timer .next{display:flex;align-items:center;gap:8px;font-size:calc(13px*var(--ts,1));font-weight:500;padding:0 4px 8px 0;margin-bottom:8px;border-bottom:.5px solid rgba(127,127,127,.4)}
 .timer .next .tempo{background:rgba(127,127,127,.25);color:inherit;flex:none}
 .timer .next .tempo span{color:inherit;opacity:.75}
 .timer .next .nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
 .timer .mainrow{display:flex;align-items:center;gap:8px}
-.timer .t{font-weight:600;font-size:34px;line-height:1;flex:1;min-width:0;font-variant-numeric:tabular-nums;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.timer.chain .t{font-size:22px}
-.timer .lbl{font-size:12px;opacity:.7;display:block;font-weight:500;letter-spacing:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px}
-.timer button{min-width:48px;height:44px;border-radius:12px;border:0;background:rgba(127,127,127,.25);color:inherit;font-weight:600;font-size:15px}
-.timer.over .in{background:var(--accent);color:var(--accent-ink);animation:pulse 1s ease-in-out infinite}
-@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.02)}}
+.timer .t{font-weight:600;font-size:calc(34px*var(--ts,1));line-height:1;flex:1;min-width:0;font-variant-numeric:tabular-nums;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.timer.chain .t{font-size:calc(22px*var(--ts,1))}
+.timer .lbl{font-size:calc(12px*var(--ts,1));opacity:.7;display:block;font-weight:500;letter-spacing:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px}
+.timer button{min-width:48px;height:44px;border-radius:12px;border:0;background:rgba(127,127,127,.25);color:inherit;font-weight:600;font-size:calc(15px*var(--ts,1))}
+.timer.over .in{background:var(--accent);color:var(--accent-ink);animation:pulseFade 1.6s ease-in-out infinite}
 /* rest timer rises just above the tab bar after a set, and leaves the same way */
 .timer .in{transition:transform 250ms var(--ease-out),opacity 200ms ease-out}
 @starting-style{.timer .in{transform:translateY(16px);opacity:0}}
@@ -218,7 +217,7 @@ h3{font-family:var(--f-display);font-weight:600;font-size:17px;line-height:1.25;
   -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 13' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1.5 1.5l5 5-5 5'/%3E%3C/svg%3E") center/contain no-repeat;
   mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 13' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1.5 1.5l5 5-5 5'/%3E%3C/svg%3E") center/contain no-repeat}
 .lvlnav{display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap}
-.lvlnav .lv{font-size:13px;font-weight:600;flex:1 1 100%;color:var(--muted)}
+.lvlnav .lv{font-size:calc(13px*var(--ts,1));font-weight:600;flex:1 1 100%;color:var(--muted)}
 .lvlnav .btn{flex:1}
 .sheet{position:fixed;inset:0;z-index:40;display:flex;align-items:flex-end;justify-content:center}
 /* scrim = separate layer: while the sheet is dragged down its opacity follows the finger (opacity only) */
@@ -238,41 +237,41 @@ h3{font-family:var(--f-display);font-weight:600;font-size:17px;line-height:1.25;
 .sheet .in{background:var(--sheet);border-radius:16px 16px 0 0;width:100%;max-width:560px;max-height:80vh;overflow:auto;overscroll-behavior:contain;
   padding-top:8px;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .sheet .in::before{content:"";display:block;width:36px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 12px}
-.hrow{padding:11px 0;border-top:.5px solid var(--line);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;font-size:15px}
+.hrow{padding:11px 0;border-top:.5px solid var(--line);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;font-size:calc(15px*var(--ts,1))}
 .hrow:first-of-type{border-top:0}
 .hrow .d{font-weight:600}
-.hrow .s{grid-column:1/-1;color:var(--muted);font-size:14px;font-variant-numeric:tabular-nums}
+.hrow .s{grid-column:1/-1;color:var(--muted);font-size:calc(14px*var(--ts,1));font-variant-numeric:tabular-nums}
 
 /* Progress */
 .seg{display:grid;grid-template-columns:repeat(3,1fr);background:var(--track);border-radius:9px;padding:2px;gap:2px}
-.seg button{border:0;background:transparent;min-height:32px;font-weight:500;font-size:14px;border-radius:7px}
+.seg button{border:0;background:transparent;min-height:32px;font-weight:500;font-size:calc(14px*var(--ts,1));border-radius:7px}
 .seg button[aria-pressed="true"]{background:var(--card);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
 /* sliding thumb (added by render): one white pill moves to the selected option, as in iOS */
 .seg{position:relative;--n:3}
 .seg .thumb{position:absolute;top:2px;bottom:2px;left:2px;width:calc((100% - 4px - (var(--n) - 1) * 2px) / var(--n));background:var(--card);border-radius:7px;box-shadow:0 1px 3px rgba(0,0,0,.12);pointer-events:none}
 .seg.has-thumb button{position:relative;z-index:1}
 .seg.has-thumb button[aria-pressed="true"]{background:transparent;box-shadow:none}
-select.pick{width:100%;min-height:48px;border:0;border-radius:12px;background:var(--card);padding:0 14px;font-weight:600;font-size:17px}
+select.pick{width:100%;min-height:48px;border:0;border-radius:12px;background:var(--card);padding:0 14px;font-weight:600;font-size:calc(17px*var(--ts,1))}
 .big{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-top:4px}
-.big .v{font-weight:700;font-size:56px;line-height:1;letter-spacing:-.035em;font-variant-numeric:tabular-nums}
-.big .u{font-weight:600;font-size:20px;color:var(--muted)}
-.delta{font-weight:700;font-size:22px;letter-spacing:-.02em}
+.big .v{font-weight:700;font-size:calc(56px*var(--ts,1));line-height:1;letter-spacing:-.035em;font-variant-numeric:tabular-nums}
+.big .u{font-weight:600;font-size:calc(20px*var(--ts,1));color:var(--muted)}
+.delta{font-weight:700;font-size:calc(22px*var(--ts,1));letter-spacing:-.02em}
 .delta.up{color:var(--good)}.delta.down{color:var(--bad)}.delta.flat{color:var(--muted)}
 .chart{width:100%;height:auto;display:block;margin-top:8px;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-.recline{font-size:13px;color:var(--muted);margin-top:4px}
+.recline{font-size:calc(13px*var(--ts,1));color:var(--muted);margin-top:4px}
 #psub.scrubbing{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink)}
 .recline b{color:var(--ink);font-weight:700}
 .kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
 .kpi .v{font-weight:700;font-size:clamp(22px,7vw,28px);line-height:1;letter-spacing:-.025em;font-variant-numeric:tabular-nums}
-.kpi .l{font-size:13px;color:var(--muted);margin-top:4px}
+.kpi .l{font-size:calc(13px*var(--ts,1));color:var(--muted);margin-top:4px}
 
 /* Calendar */
 .cal-nav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
-.cal-nav h3{font-size:20px;font-weight:700;text-transform:capitalize}
-.cal-nav .iconbtn{font-size:22px;color:var(--accent-text);background:transparent}
+.cal-nav h3{font-size:calc(20px*var(--ts,1));font-weight:700;text-transform:capitalize}
+.cal-nav .iconbtn{font-size:calc(22px*var(--ts,1));color:var(--accent-text);background:transparent}
 .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
-.cal .wd{font-size:12px;font-weight:600;color:var(--muted);padding:4px 0}
-.day{aspect-ratio:1;max-width:100%;border:0;background:transparent;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-weight:500;font-size:17px;font-variant-numeric:tabular-nums}
+.cal .wd{font-size:calc(12px*var(--ts,1));font-weight:600;color:var(--muted);padding:4px 0}
+.day{aspect-ratio:1;max-width:100%;border:0;background:transparent;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-weight:500;font-size:calc(17px*var(--ts,1));font-variant-numeric:tabular-nums}
 .day.out{visibility:hidden}
 .day .dot{width:6px;height:6px;border-radius:50%;background:transparent}
 .day.has .dot{background:var(--accent)}
@@ -280,45 +279,45 @@ select.pick{width:100%;min-height:48px;border:0;border-radius:12px;background:va
 .day.sel{background:var(--accent);color:var(--accent-ink)}
 .day.sel .dot{background:var(--accent-ink)}
 .day:disabled{color:var(--muted);opacity:.55}
-.detail-ex{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;padding:9px 0;border-top:.5px solid var(--line);font-size:15px}
+.detail-ex{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;padding:9px 0;border-top:.5px solid var(--line);font-size:calc(15px*var(--ts,1))}
 .detail-ex:first-of-type{border-top:0}
 .detail-ex b{min-width:0;overflow-wrap:anywhere}
 .sesex .swipe{border-radius:10px}.sesex .swipe-fg{border-radius:10px}.sesex .swipe+.swipe .detail-ex{border-top:.5px solid var(--line)}.sesex .detail-ex{border-top:0}
-.detail-ex .sets-txt{grid-column:1/-1;color:var(--muted);font-size:14px;font-variant-numeric:tabular-nums}
+.detail-ex .sets-txt{grid-column:1/-1;color:var(--muted);font-size:calc(14px*var(--ts,1));font-variant-numeric:tabular-nums}
 
 /* Summary */
 .tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .tile .v{font-weight:700;font-size:clamp(28px,9vw,40px);line-height:1;letter-spacing:-.035em;font-variant-numeric:tabular-nums}
-.tile .l{font-size:13px;color:var(--muted);margin-top:6px;line-height:1.2}
+.tile .l{font-size:calc(13px*var(--ts,1));color:var(--muted);margin-top:6px;line-height:1.2}
 .tile.hot{background:var(--accent);color:var(--accent-ink)}
 .tile.hot .l{color:inherit;opacity:.85}
 
 /* Bilan */
-.bl-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;padding:10px 0;border-top:.5px solid var(--line);align-items:baseline;font-size:15px}
+.bl-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;padding:10px 0;border-top:.5px solid var(--line);align-items:baseline;font-size:calc(15px*var(--ts,1))}
 .bl-row:first-of-type{border-top:0}
 .bl-row .nm{font-weight:600;min-width:0;overflow-wrap:anywhere}
-.bl-row .why{grid-column:1/-1;color:var(--muted);font-size:13px}
-.verdict{font-weight:700;font-size:13px;white-space:nowrap}
+.bl-row .why{grid-column:1/-1;color:var(--muted);font-size:calc(13px*var(--ts,1))}
+.verdict{font-weight:700;font-size:calc(13px*var(--ts,1));white-space:nowrap}
 .verdict.up{color:var(--accent-text)}.verdict.down{color:var(--bad)}.verdict.top{color:var(--good)}.verdict.fail{color:var(--bad)}.verdict.mid{color:var(--muted)}
 
 /* Routines editor */
 .field{display:flex;flex-direction:column;gap:4px;min-width:0}
-.field label{font-size:13px;font-weight:500;color:var(--muted)}
-.field .hint{font-size:12px;color:var(--muted)}
-.inp{min-height:44px;border:0;border-radius:10px;background:var(--track);padding:0 12px;width:100%;min-width:0;font-size:16px}
+.field label{font-size:calc(13px*var(--ts,1));font-weight:500;color:var(--muted)}
+.field .hint{font-size:calc(12px*var(--ts,1));color:var(--muted)}
+.inp{min-height:44px;border:0;border-radius:10px;background:var(--track);padding:0 12px;width:100%;min-width:0;font-size:calc(16px*var(--ts,1))}
 .inp:disabled{opacity:.55}
 .ex-edit{border-top:.5px solid var(--line);padding-top:12px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
 .ex-edit.linked{border-top:1.5px dashed var(--accent)}
 .ex-edit .full{grid-column:1/-1}
 .ex-edit .tools{grid-column:1/-1;display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap}
 .checks{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:4px 16px}
-.check{display:flex;align-items:center;gap:8px;min-height:40px;font-size:15px;font-weight:500}
+.check{display:flex;align-items:center;gap:8px;min-height:40px;font-size:calc(15px*var(--ts,1));font-weight:500}
 .check input{width:20px;height:20px;accent-color:var(--accent)}
-.toast{position:fixed;left:50%;transform:translateX(-50%);top:calc(10px + env(safe-area-inset-top,0px));z-index:30;background:var(--float);color:var(--float-ink);padding:11px 16px;border-radius:14px;font-weight:600;font-size:15px;max-width:calc(100% - 32px);box-shadow:var(--float-shadow);
+.toast{position:fixed;left:50%;transform:translateX(-50%);top:calc(10px + env(safe-area-inset-top,0px));z-index:30;background:var(--float);color:var(--float-ink);padding:11px 16px;border-radius:14px;font-weight:600;font-size:calc(15px*var(--ts,1));max-width:calc(100% - 32px);box-shadow:var(--float-shadow);
   transition:transform 300ms var(--ease-out),opacity 300ms ease-out}
 .toast.closing{opacity:0;transform:translate(-50%,-8px);transition-duration:180ms}
 @starting-style{.toast{opacity:0;transform:translate(-50%,-12px)}}
-textarea.dump{width:100%;min-height:140px;border:0;border-radius:10px;background:var(--track);padding:10px;font-family:ui-monospace,Menlo,monospace;font-size:16px}
+textarea.dump{width:100%;min-height:140px;border:0;border-radius:10px;background:var(--track);padding:10px;font-family:ui-monospace,Menlo,monospace;font-size:calc(16px*var(--ts,1))}
 .empty{padding:22px 14px;text-align:center;color:var(--muted)}
 /* reduced motion = no movement, but fades and colour changes stay (they are feedback, not motion) */
 @media (prefers-reduced-motion: reduce){
@@ -342,7 +341,7 @@ textarea.dump{width:100%;min-height:140px;border:0;border-radius:10px;background
 /* swipe to delete */
 .swipe{position:relative;border-radius:var(--r);overflow:hidden}
 /* the red layer is always full width under the row (no width animation): only the row and the label move (transform) */
-.swipe-del{position:absolute;inset:0;border:0;padding:0;background:var(--bad);color:#fff;font-weight:600;font-size:15px;border-radius:var(--r);visibility:hidden;container-type:inline-size}
+.swipe-del{position:absolute;inset:0;border:0;padding:0;background:var(--bad);color:#fff;font-weight:600;font-size:calc(15px*var(--ts,1));border-radius:var(--r);visibility:hidden;container-type:inline-size}
 /* label: centred in the uncovered red area (96 px at rest); once armed (past half the row) it jumps against the content edge.
    It moves with the row: same duration and curve, never on its own delay */
 .swipe-del .lbl{position:absolute;left:0;top:0;bottom:0;display:flex;align-items:center;white-space:nowrap;pointer-events:none;
@@ -358,14 +357,14 @@ textarea.dump{width:100%;min-height:140px;border:0;border-radius:10px;background
 .swipe.open>.swipe-fg{transform:translateX(-96px);border-radius:var(--r) 0 0 var(--r)}
 .lrow{display:flex;align-items:center;gap:12px;padding:13px 16px;width:100%;text-align:left;background:none;border:0;min-height:60px}
 .lrow .t{flex:1;min-width:0}
-.lrow .t b{display:block;font-weight:600;font-size:17px;overflow-wrap:anywhere}
-.lrow .sub{font-size:13px;color:var(--muted);margin-top:2px}
+.lrow .t b{display:block;font-weight:600;font-size:calc(17px*var(--ts,1));overflow-wrap:anywhere}
+.lrow .sub{font-size:calc(13px*var(--ts,1));color:var(--muted);margin-top:2px}
 .lrow .chev{width:8px;height:13px;flex:none;color:var(--muted);opacity:.6}
 /* iOS inset grouped list: one rounded block, hairline separators inset to the text */
 .group{background:var(--card);border-radius:var(--r);overflow:hidden}
 .group>.swipe,.group>.swipe>.swipe-fg,.group>.swipe.open>.swipe-fg,.group>.swipe>.swipe-del{border-radius:0}
 .group>.swipe+.swipe>.swipe-fg::before{content:"";position:absolute;left:16px;right:0;top:0;height:.5px;background:var(--line);z-index:1}
-.badge{display:inline-block;font-size:11px;font-weight:600;border-radius:5px;padding:1px 6px;background:var(--accent-soft);color:var(--accent-text);margin-left:6px;vertical-align:2px}
+.badge{display:inline-block;font-size:calc(11px*var(--ts,1));font-weight:600;border-radius:5px;padding:1px 6px;background:var(--accent-soft);color:var(--accent-text);margin-left:6px;vertical-align:2px}
 
 /* alert dialog */
 .modal{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:24px}
@@ -380,22 +379,22 @@ textarea.dump{width:100%;min-height:140px;border:0;border-radius:10px;background
 .modal.closing>.scrim,.modal.closing .box{opacity:0;transition-duration:150ms}
 @starting-style{.modal>.scrim{opacity:0}.modal .box{opacity:0;transform:scale(1.08)}}
 .modal .box{background:var(--alert);border-radius:16px;width:100%;max-width:290px;text-align:center;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.3)}
-.modal h3{padding:18px 16px 4px;font-size:17px;font-weight:600;text-wrap:balance}
-.modal p{margin:0;padding:2px 16px 16px;font-size:13px;color:var(--muted)}
+.modal h3{padding:18px 16px 4px;font-size:calc(17px*var(--ts,1));font-weight:600;text-wrap:balance}
+.modal p{margin:0;padding:2px 16px 16px;font-size:calc(13px*var(--ts,1));color:var(--muted)}
 .mbtns{display:grid;grid-template-columns:1fr 1fr;border-top:.5px solid var(--line)}
 .mbtns.one{grid-template-columns:1fr}
-.mbtns button{border:0;background:none;min-height:46px;font-size:17px;color:var(--accent-text)}
+.mbtns button{border:0;background:none;min-height:46px;font-size:calc(17px*var(--ts,1));color:var(--accent-text)}
 .mbtns button+button{border-left:.5px solid var(--line)}
 .mbtns .del{color:var(--bad);font-weight:600}
 
 /* rest picker (two wheels) */
-.pheads{display:grid;grid-template-columns:1fr 1fr;text-align:center;font-size:13px;color:var(--muted);margin-top:6px}
+.pheads{display:grid;grid-template-columns:1fr 1fr;text-align:center;font-size:calc(13px*var(--ts,1));color:var(--muted);margin-top:6px}
 .picker{position:relative;display:grid;grid-template-columns:1fr 1fr;height:220px;margin:4px 0 12px}
 .picker .band{position:absolute;left:8px;right:8px;top:88px;height:44px;border-radius:10px;background:var(--track);pointer-events:none}
 .pcol{position:relative;height:220px;overflow-y:scroll;overscroll-behavior:contain;scroll-snap-type:y mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:88px 0;
   -webkit-mask-image:linear-gradient(transparent,#000 32%,#000 68%,transparent);mask-image:linear-gradient(transparent,#000 32%,#000 68%,transparent)}
 .pcol::-webkit-scrollbar{display:none}
-.pcol div{height:44px;line-height:44px;text-align:center;scroll-snap-align:center;font-size:24px;font-variant-numeric:tabular-nums;color:var(--muted);cursor:pointer}
+.pcol div{height:44px;line-height:44px;text-align:center;scroll-snap-align:center;font-size:calc(24px*var(--ts,1));font-variant-numeric:tabular-nums;color:var(--muted);cursor:pointer}
 .pcol div.on{color:var(--ink);font-weight:600}
 
 /* routine & exercise editors */
@@ -404,24 +403,27 @@ textarea.dump{width:100%;min-height:140px;border:0;border-radius:10px;background
 .ied-head .mlabel{margin-top:13px}
 .grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
 .mstep{display:grid;grid-template-columns:40px minmax(0,1fr) 40px;background:var(--track);border-radius:10px;height:44px;align-items:center}
-.mstep button{border:0;background:none;font-size:22px;color:var(--accent-text);height:100%}
-.mstep span{text-align:center;font-weight:700;font-size:17px;font-variant-numeric:tabular-nums}
+.mstep button{border:0;background:none;font-size:calc(22px*var(--ts,1));color:var(--accent-text);height:100%}
+.mstep span{text-align:center;font-weight:700;font-size:calc(17px*var(--ts,1));font-variant-numeric:tabular-nums}
 .range{display:flex;align-items:center;gap:6px}
 .range .inp{text-align:center;padding:0 6px}
-.range span{color:var(--muted);font-size:14px;white-space:nowrap}
-.restbtn{min-height:44px;border:0;border-radius:10px;background:var(--track);font-weight:600;font-size:17px;font-variant-numeric:tabular-nums;width:100%;color:var(--accent-text)}
+.range span{color:var(--muted);font-size:calc(14px*var(--ts,1));white-space:nowrap}
+.restbtn{min-height:44px;border:0;border-radius:10px;background:var(--track);font-weight:600;font-size:calc(17px*var(--ts,1));font-variant-numeric:tabular-nums;width:100%;color:var(--accent-text)}
 .sugg{margin-top:6px;border-radius:10px;background:var(--track);overflow:hidden}
 .sugg[hidden]{display:none}
-.sugg button{display:block;width:100%;text-align:left;border:0;background:none;padding:11px 12px;font-size:15px}
+.sugg button{display:block;width:100%;text-align:left;border:0;background:none;padding:11px 12px;font-size:calc(15px*var(--ts,1))}
 .sugg button+button{border-top:.5px solid var(--line)}
 .sugg .new{color:var(--accent-text);font-weight:600}
-.tg{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:46px;border-top:.5px solid var(--line);font-size:16px}
+.tg{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:46px;border-top:.5px solid var(--line);font-size:calc(16px*var(--ts,1))}
 .tg:first-child{border-top:0}
-.tg small{display:block;font-size:12px;color:var(--muted)}
+.tg small{display:block;font-size:calc(12px*var(--ts,1));color:var(--muted)}
 .switch{appearance:none;-webkit-appearance:none;width:51px;height:31px;border-radius:16px;background:var(--line);position:relative;transition:background .2s;flex:none;margin:0;cursor:pointer}
-.switch::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.2);transition:transform .2s}
+.switch::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.2);transform-origin:left center;transition:transform var(--spring-d,.2s) var(--spring,ease)}
 .switch:checked{background:var(--good)}
-.switch:checked::after{transform:translateX(20px)}
+.switch:checked::after{transform:translateX(20px);transform-origin:right center}
+/* pressed: the thumb stretches toward the middle, as on iOS */
+.switch:active:not(:disabled)::after{transform:scaleX(1.2)}
+.switch:checked:active:not(:disabled)::after{transform:translateX(20px) scaleX(1.2)}
 .switch:disabled{opacity:.4}
 .seg.three{grid-template-columns:repeat(3,1fr)}
 .seg.four{grid-template-columns:repeat(4,1fr);--n:4}
@@ -432,13 +434,13 @@ textarea.dump{width:100%;min-height:140px;border:0;border-radius:10px;background
 .steps{display:flex;flex-direction:column;gap:6px}
 .steps .swipe-fg{background:var(--track)}
 textarea.inp{min-height:110px;padding:10px 12px;line-height:1.4;resize:vertical}
-.how{white-space:pre-wrap;font-size:15px;line-height:1.45;overflow-wrap:anywhere}
-.search{min-height:40px;border:0;border-radius:10px;background:var(--track);padding:0 12px;width:100%;font-size:16px}
+.how{white-space:pre-wrap;font-size:calc(15px*var(--ts,1));line-height:1.45;overflow-wrap:anywhere}
+.search{min-height:40px;border:0;border-radius:10px;background:var(--track);padding:0 12px;width:100%;font-size:calc(16px*var(--ts,1))}
 
 .steps .inp{background:var(--card)}
 
 /* live session: smaller title so a long routine name does not stack against the clock */
-.sess-head h1{font-size:26px}
+.sess-head h1{font-size:calc(26px*var(--ts,1))}
 /* narrow phones (iPhone SE, display zoom): the two steppers of a set go on two rows so the values stay readable */
 @media (max-width:374px){
   .set:not(.c3):not(.uni),.set.uni.nokg{grid-template-areas:none;grid-template-columns:20px minmax(0,1fr) 50px;grid-template-rows:50px 50px}
@@ -463,8 +465,8 @@ body.kb .tabbar,body.kb .timer{display:none}
 .navbar.on{opacity:1;pointer-events:auto}
 .navbar .in{max-width:560px;margin:0 auto;height:44px;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:8px;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-.nav-clock{justify-self:start;grid-column:1;white-space:nowrap;font-size:17px;font-weight:600;font-variant-numeric:tabular-nums}
-.nav-title{grid-column:2;font-weight:600;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:min(60vw,320px);text-align:center}
+.nav-clock{justify-self:start;grid-column:1;white-space:nowrap;font-size:calc(17px*var(--ts,1));font-weight:600;font-variant-numeric:tabular-nums}
+.nav-title{grid-column:2;font-weight:600;font-size:calc(17px*var(--ts,1));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:min(60vw,320px);text-align:center}
 /* edge swipe back: the detail screen follows the finger, the list lies under it (parallax, slightly dimmed) */
 /* the sliding screen takes its side margins with it (they are on body): its content stays 16 px off its moving edge,
    at the same place on screen as before the gesture. No line or shadow on its edge (wanted: a seamless slide); in dark mode the list under it is dimmed */
@@ -553,6 +555,26 @@ const lsSet=(k,v)=>{try{localStorage.setItem(k,v);return true}catch(e){return fa
 const lsDel=k=>{try{localStorage.removeItem(k)}catch(e){}};
 /* reduced motion: read live (the setting can change while the app is open) */
 const RM=(()=>{try{return matchMedia("(prefers-reduced-motion: reduce)")}catch(e){return{matches:false}}})();
+/* springs without a library: the analytic spring (response in s, damping 1 = no bounce, v0 = initial speed in
+   distances per second, i.e. the finger's speed divided by the distance left) sampled into a CSS linear() easing.
+   Returns null where linear() is not supported: callers keep their cubic-bezier. */
+const LINEAR_OK=(()=>{try{return CSS.supports("transition-timing-function","linear(0, 1)")}catch(e){return false}})();
+function springEase(response,damping,v0){
+  if(!LINEAR_OK)return null;const w=2*Math.PI/response,z=Math.min(1,damping??1);v0=Math.max(-30,Math.min(60,v0||0));
+  const wd=w*Math.sqrt(Math.max(0,1-z*z));
+  const pos=t=>z>=1?1-Math.exp(-w*t)*(1+(w-v0)*t):1-Math.exp(-z*w*t)*(Math.cos(wd*t)+((z*w-v0)/wd)*Math.sin(wd*t));
+  let T=0;for(let t=0;t<=1.5;t+=1/240)if(Math.abs(1-pos(t))>.001)T=t;T=Math.max(T+1/60,.1);
+  const n=40,pts=[];for(let i=0;i<=n;i++)pts.push(i===n?1:+pos(T*i/n).toFixed(4));pts[0]=0;
+  return{easing:`linear(${pts.join(", ")})`,duration:Math.round(T*1000)};
+}
+/* CSS transitions that use the default spring (switch thumb) */
+(()=>{const s=springEase(.32,1,0);if(s){document.documentElement.style.setProperty("--spring",s.easing);document.documentElement.style.setProperty("--spring-d",s.duration+"ms")}})();
+/* iOS text size (Settings › Display › Text Size): body text is 17 px at the default size; every font size scales by
+   --ts, never below today's sizes (fields stay ≥ 16 px: no zoom on focus) and at most ×1.24 so the set rows still fit */
+function applyTS(){try{const p=document.createElement("span");p.style.cssText="position:absolute;visibility:hidden;pointer-events:none;font-size:17px";
+  p.style.font="-apple-system-body";p.textContent="x";document.body.appendChild(p);const fs=parseFloat(getComputedStyle(p).fontSize);p.remove();
+  if(fs>0)document.documentElement.style.setProperty("--ts",String(Math.max(1,Math.min(1.24,fs/17))))}catch(e){}}
+applyTS();document.addEventListener("visibilitychange",()=>{if(!document.hidden)applyTS()});
 /* show / hide an overlay with its CSS exit transition: .closing plays the exit, then hidden; showing again cancels a pending hide */
 function showEl(el){clearTimeout(el._hideT);if(el.id==="sheet")sheetReset();el.classList.remove("closing");el.hidden=false}
 function hideEl(el,ms){if(el.hidden)return;clearTimeout(el._hideT);el.classList.add("closing");el._hideT=setTimeout(()=>{el.hidden=true;el.classList.remove("closing")},ms)}
@@ -811,7 +833,7 @@ function segPositions(){const m={};main.querySelectorAll(".seg .thumb").forEach(
 function paintSegs(prev){main.querySelectorAll(".seg").forEach(seg=>{const bs=[...seg.querySelectorAll("button")];const i=bs.findIndex(b=>b.getAttribute("aria-pressed")==="true");if(i<0)return;
   const th=document.createElement("i");th.className="thumb";th.style.transform=`translateX(calc(${i} * (100% + 2px)))`;seg.prepend(th);seg.classList.add("has-thumb");
   const p=prev[seg.getAttribute("aria-label")];if(p==null||RM.matches)return;const dx=p-(th.getBoundingClientRect().left-seg.getBoundingClientRect().left);
-  if(Math.abs(dx)>.5)th.animate([{transform:`translateX(calc(${i} * (100% + 2px) + ${dx}px))`},{transform:th.style.transform}],{duration:200,easing:"cubic-bezier(.77,0,.175,1)"})})}
+  const sp=springEase(.3,1,0);if(Math.abs(dx)>.5)th.animate([{transform:`translateX(calc(${i} * (100% + 2px) + ${dx}px))`},{transform:th.style.transform}],sp||{duration:200,easing:"cubic-bezier(.77,0,.175,1)"})})}
 /* level up / regression banner: arrives once (scale .96 → 1, 250 ms, 50 ms apart), later renders do not replay it */
 const lvlSeen=new Set();
 function revealLvl(){let k=0;main.querySelectorAll(".lvl[data-k]").forEach(el=>{const key=el.dataset.k;if(lvlSeen.has(key))return;lvlSeen.add(key);if(!el.animate)return;
@@ -830,7 +852,7 @@ function vBilan(){
     const why=it.verdict?(it.auto?`${esc(it.from)} → <b>${esc(it.to)}</b> à la prochaine séance`:esc(it.msg)):"";
     return `<div class="bl-row"><span class="nm">${esc(it.name)}</span><span class="verdict ${cls}">${lab}</span>${why?`<span class="why">${why}</span>`:""}</div>`}).join("");
   return `<div class="card bilan"><div class="card-head"><h3>Bilan de la séance</h3><button class="link" data-act="close-bilan">Fermer</button></div>
-    <p class="muted" style="font-size:13px;margin:4px 0 6px">${esc(rName(b.routine))} · règle des 2 séances consécutives</p>${rows}</div>`;
+    <p class="muted" style="font-size:calc(13px*var(--ts,1));margin:4px 0 6px">${esc(rName(b.routine))} · règle des 2 séances consécutives</p>${rows}</div>`;
 }
 function vRecord(){
   if(draft)return draft.check?vWrist():vLive();
@@ -875,7 +897,7 @@ function startSession(rid){
 function vWrist(){
   return `<div class="eyebrow">Avant de commencer</div><h1 style="margin:2px 0 14px">${esc(rName(draft.routine))}</h1>
    <div class="stack"><div class="card stack"><h3>Poignets</h3>
-    <p class="muted" style="margin:0;font-size:14px">Douleur aux poignets maintenant, de 0 à 10. Au-dessus de 3, les kick-ups sont retirés aujourd'hui et le handstand reste au mur.</p>
+    <p class="muted" style="margin:0;font-size:calc(14px*var(--ts,1))">Douleur aux poignets maintenant, de 0 à 10. Au-dessus de 3, les kick-ups sont retirés aujourd'hui et le handstand reste au mur.</p>
     <label class="check"><input type="checkbox" id="wristBack"> La douleur est revenue le lendemain de la dernière séance</label>
     <div class="scale">${Array.from({length:11},(_,v)=>`<button data-act="wrist" data-v="${v}" class="${v>3?"hi":""}" aria-label="Douleur ${v} sur 10">${v}</button>`).join("")}</div></div>
     <button class="btn quiet block" data-act="cancel">Abandonner la séance</button></div>`;
@@ -909,7 +931,7 @@ function exInner(ei,label){
   if(e.pending){const p=e.pending;
     lvl=`<div class="lvl ${p.dir}" data-k="${esc((draft&&draft.id||"")+"|"+ei+"|"+p.dir+"|"+(p.to||p.msg||""))}"><span class="k">${p.dir==="up"?"Level up · augmente la difficulté":"Régression · allège"}</span>
       <span class="d">${p.auto?`${esc(p.from)} → <b>${esc(p.to)}</b>`:esc(p.msg)}</span>
-      <span class="d" style="font-weight:500;font-size:13px">${p.dir==="up"?"Haut de fourchette réussi 2 séances d'affilée.":"Bas de fourchette manqué 2 séances d'affilée."}</span>
+      <span class="d" style="font-weight:500;font-size:calc(13px*var(--ts,1))">${p.dir==="up"?"Haut de fourchette réussi 2 séances d'affilée.":"Bas de fourchette manqué 2 séances d'affilée."}</span>
       ${p.alt&&item?`<button class="undo" data-act="alt-ext" data-ei="${ei}">Saut trop grand : vise d'abord ${(item.hi??0)+2} reps à l'ancienne charge</button>`:""}
       ${p.auto&&item?`<button class="undo" data-act="undo-lvl" data-ei="${ei}">Garder l'ancien niveau</button>`:""}</div>`}
   const nav=item&&ex.prog==="etapes"&&ex.steps.length&&!item.auto&&!e.pending?`<div class="lvlnav"><span class="lv">Étape ${clamp(ex.lvl,0,ex.steps.length-1)+1} sur ${ex.steps.length} · changement manuel</span>
@@ -921,7 +943,7 @@ function exInner(ei,label){
     ${e.note?`<div class="note clamp" data-act="note" title="Toucher pour déplier">${esc(e.note)}</div>`:""}
     ${nav}${lvl}
     ${lp&&!e.pending?`<div class="last">Dernière fois (${fmtDateShort(lp.s.date)}) : ${esc(setsTxt(lp.e))}</div>`:""}
-    ${t?`<div class="muted" style="font-size:12px;margin-top:4px">Pour le level up : ${t.sets} × ${t.hi}${unitOf(e.mode)}${e.uni?" de chaque côté":""}, 2 séances d'affilée${item.ext?" · étape +2 reps avant l'haltère suivant":""}</div>`:""}
+    ${t?`<div class="muted" style="font-size:calc(12px*var(--ts,1));margin-top:4px">Pour le level up : ${t.sets} × ${t.hi}${unitOf(e.mode)}${e.uni?" de chaque côté":""}, 2 séances d'affilée${item.ext?" · étape +2 reps avant l'haltère suivant":""}</div>`:""}
     <div class="sets">${rows}</div>
     ${e.mode==="kick"?"":`<div class="set-tools"><button class="btn small" data-act="add-set" data-ei="${ei}">+ Série</button><button class="btn small ghost" data-act="rm-set" data-ei="${ei}" ${e.sets.length<2?"disabled":""}>− Série</button></div>`}`;
 }
@@ -935,7 +957,7 @@ function vLive(){
       ${b.map((i,k)=>`<div class="member">${exInner(i,L+(k+1))}</div>`).join("")}</section>`;
   }).join("");
   return `<div class="sess-head"><div style="min-width:0"><div class="eyebrow">Séance en cours</div><h1 style="margin:2px 0 0">${esc(rName(d.routine))}</h1></div>
-      <div style="text-align:right"><div class="clock num" id="clock">${mmss((Date.now()-d.startedAt)/1000)}</div><div class="muted" id="doneCount" style="font-size:13px">${done} série${done>1?"s":""} validée${done>1?"s":""}</div></div></div>
+      <div style="text-align:right"><div class="clock num" id="clock">${mmss((Date.now()-d.startedAt)/1000)}</div><div class="muted" id="doneCount" style="font-size:calc(13px*var(--ts,1))">${done} série${done>1?"s":""} validée${done>1?"s":""}</div></div></div>
     <div class="stack">${d.guard?`<div class="guard">${esc(d.guard)}</div>`:""}${body||'<div class="card empty">Ajoute ton premier exercice.</div>'}
     <div class="card"><div class="field"><label for="liveEx">Ajouter un exercice</label>
       <input class="inp" id="liveEx" data-sugg="live" placeholder="Tape les premières lettres…" autocomplete="off" autocapitalize="off"><div class="sugg" id="sugg-live" hidden></div></div>
@@ -1067,7 +1089,7 @@ function itemEditor(r,it,idx){
 function vRoutineEdit(r){
   return `<button class="link" data-act="back-r">‹ Routines</button>
    <h1 style="margin-top:4px">${esc(r.name)||"Nouvelle routine"}</h1>
-   <div class="stack"><div class="card"><div class="field"><label for="rname">Nom de la routine</label><input class="inp" id="rname" value="${esc(r.name)}" style="font-weight:600;font-size:17px"></div></div>
+   <div class="stack"><div class="card"><div class="field"><label for="rname">Nom de la routine</label><input class="inp" id="rname" value="${esc(r.name)}" style="font-weight:600;font-size:calc(17px*var(--ts,1))"></div></div>
      ${r.items.map((it,i)=>itemEditor(r,it,i)).join("")}
      <p class="foot">Glisse un exercice vers la gauche pour le retirer.</p>
      <button class="btn block" data-act="it-add">+ Ajouter un exercice</button>
@@ -1141,19 +1163,19 @@ function vProgress(){
   if(pts.length){const cur=pts[pts.length-1].v,d=cur-pts[0].v;const cls=d>0?"up":d<0?"down":"flat";
     head=`<div class="eyebrow" style="padding-left:0">${metricLabel(metric)} · dernière séance</div>
       <div class="big"><span class="v num" id="pv">${fmt(cur)}</span><span class="u">${unit(metric)}</span><span class="delta ${cls} num" id="pdelta">${deltaTxt(d,metric)}</span></div>
-      <div class="muted" id="psub" style="font-size:13px">Depuis le ${fmtDateShort(pts[0].date)} · ${pts.length} séance${pts.length>1?"s":""} ${ui.period?"sur la période":"en tout"}${metric==="reps"?" · en G / D, le côté le plus faible compte":""}</div>`;
+      <div class="muted" id="psub" style="font-size:calc(13px*var(--ts,1))">Depuis le ${fmtDateShort(pts[0].date)} · ${pts.length} séance${pts.length>1?"s":""} ${ui.period?"sur la période":"en tout"}${metric==="reps"?" · en G / D, le côté le plus faible compte":""}</div>`;
     head+=recLine;
   }else head=`<div class="muted">Aucune séance avec cet exercice sur cette période.</div>${recLine}`;
   prog=pts.length?{pts,t0:from.getTime(),t1:Date.now(),metric}:null;
   const last=sortedSessions().pop();let lastCard="";
   if(last){const vol=sessionVolume(last);
-    lastCard=`<h2>Dernière séance</h2><div class="card"><div class="card-head"><h3>${esc(rName(last.routine))}</h3><span class="muted" style="font-size:14px">${DAYS[parseISO(last.date).getDay()]} ${fmtDateShort(last.date)}</span></div>
+    lastCard=`<h2>Dernière séance</h2><div class="card"><div class="card-head"><h3>${esc(rName(last.routine))}</h3><span class="muted" style="font-size:calc(14px*var(--ts,1))">${DAYS[parseISO(last.date).getDay()]} ${fmtDateShort(last.date)}</span></div>
       <div class="kpis"><div class="kpi"><div class="v num">${last.exercises.length}</div><div class="l">exercice${last.exercises.length>1?"s":""}</div></div><div class="kpi"><div class="v num">${vol.n}</div><div class="l">série${vol.n>1?"s":""}</div></div><div class="kpi"><div class="v num">${nf2.format(vol.v/1000)}</div><div class="l">tonnes soulevées</div></div></div>
-      <p class="muted" style="font-size:12px;margin:10px 0 0">Volume = répétitions × charge saisie (G + D pour l'unilatéral). Pour le lesté, seule la charge ajoutée compte.</p></div>`}
+      <p class="muted" style="font-size:calc(12px*var(--ts,1));margin:10px 0 0">Volume = répétitions × charge saisie (G + D pour l'unilatéral). Pour le lesté, seule la charge ajoutée compte.</p></div>`}
   return `<h1>Progrès</h1><div class="stack">
     <select class="pick" id="exoPick" aria-label="Exercice">${names.map(n=>`<option value="${esc(n)}" ${n===ui.exo?"selected":""}>${esc(n)}</option>`).join("")}</select>
     <div class="seg four" role="group" aria-label="Période">${[1,3,6,0].map(p=>`<button data-act="period" data-p="${p}" aria-pressed="${ui.period===p}">${p?p+" mois":"Tout"}</button>`).join("")}</div>
-    <div class="card">${head}${pts.length?chart(pts,from.getTime(),Date.now(),metric)+`<p class="muted" style="font-size:12px;margin:4px 0 0">Maintiens le doigt sur la courbe pour voir le détail.</p>`:""}</div>${lastCard}</div>`;
+    <div class="card">${head}${pts.length?chart(pts,from.getTime(),Date.now(),metric)+`<p class="muted" style="font-size:calc(12px*var(--ts,1));margin:4px 0 0">Maintiens le doigt sur la courbe pour voir le détail.</p>`:""}</div>${lastCard}</div>`;
 }
 const deltaTxt=(d,metric)=>(d>0?"+":d<0?"−":"±")+fmt(Math.abs(d))+" "+unit(metric);
 /* best value ever for one exercise (kick-ups: best free hold) */
@@ -1235,7 +1257,7 @@ function vHistory(){
   if(ui.calDay&&byDay[ui.calDay]){const d=parseISO(ui.calDay);
     detail=`<h2 id="dayTitle" style="text-transform:capitalize">${DAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]}</h2>`+byDay[ui.calDay].map(s=>{const vol=sessionVolume(s);const dur=s.end&&s.start?Math.round((s.end-s.start)/60000):null;
       return swipeRow("session",s.id,`<div style="padding:14px 16px"><div class="card-head"><h3>${esc(rName(s.routine))}</h3></div>
-       <div class="muted" style="font-size:13px;margin:2px 0 8px">${dur?dur+" min · ":""}${pl(s.exercises.length,"exercice","exercices")} · ${pl(vol.n,"série","séries")} · ${nf2.format(vol.v/1000)} t${s.wrist!=null?" · poignets "+s.wrist+"/10":""}</div>
+       <div class="muted" style="font-size:calc(13px*var(--ts,1));margin:2px 0 8px">${dur?dur+" min · ":""}${pl(s.exercises.length,"exercice","exercices")} · ${pl(vol.n,"série","séries")} · ${nf2.format(vol.v/1000)} t${s.wrist!=null?" · poignets "+s.wrist+"/10":""}</div>
        <div class="sesex">${s.exercises.map((e,k)=>swipeRow("sesex",s.id+"|"+k,`<div class="detail-ex"><b>${esc(e.name)}${e.tempo?` <span class="muted" style="font-weight:500">· ${esc(e.tempo)}</span>`:""}</b><span class="muted">${e.sets.length} série${e.sets.length>1?"s":""}</span><span class="sets-txt">${esc(setsTxt(e))}</span></div>`)).join("")}</div></div>`)}).join("")
       +`<p class="foot">Glisse une séance (par son titre) ou un exercice vers la gauche pour le supprimer.</p>`;
   }
@@ -1247,7 +1269,7 @@ function vHistory(){
     <div class="cal">${cells}</div></div>
    ${detail||(S.sessions.length?`<p class="foot">Touche un jour marqué d'un point pour voir la séance.</p>`:"")}
    <h2>Mes données</h2>
-   <div class="card stack">${backupDue()?`<div class="banner">${ui.lastExport?`Dernière sauvegarde le ${fmtDateShort(iso(new Date(ui.lastExport)))}.`:"Aucune sauvegarde pour l'instant."} Tes séances n'existent que sur ce téléphone : sauvegarde-les dans un fichier.</div>`:""}<p class="muted" style="margin:0;font-size:14px">Enregistré sur cet appareil. Exporte régulièrement un fichier de sauvegarde.</p>
+   <div class="card stack">${backupDue()?`<div class="banner">${ui.lastExport?`Dernière sauvegarde le ${fmtDateShort(iso(new Date(ui.lastExport)))}.`:"Aucune sauvegarde pour l'instant."} Tes séances n'existent que sur ce téléphone : sauvegarde-les dans un fichier.</div>`:""}<p class="muted" style="margin:0;font-size:calc(14px*var(--ts,1))">Enregistré sur cet appareil. Exporte régulièrement un fichier de sauvegarde.</p>
     <button class="btn block" data-act="export">Sauvegarder dans un fichier</button><div id="dumpBox" hidden></div>
     <button class="btn block" data-act="export-csv">Exporter pour Excel ou Sheets (CSV)</button>
     <button class="btn block" data-act="import">Importer un fichier de sauvegarde</button><div id="importBox" hidden></div>
@@ -1279,7 +1301,7 @@ async function doExport(kind){
   let dl=null;try{dl=window.claude&&window.claude.use?await window.claude.use("downloads"):null}catch(e){}
   if(dl){try{await dl.save({filename:name,data});toast("Sauvegarde enregistrée.");markExported(kind);return}catch(e){if(e&&e.code==="declined")return}}
   const box=$("#dumpBox");if(!box)return;box.hidden=false;
-  box.innerHTML=`<p class="muted" style="font-size:13px;margin:0 0 6px">Le téléchargement n'est pas disponible ici. Copie ce texte dans un fichier nommé ${esc(name)}.</p><textarea class="dump" id="dump" readonly aria-label="Données exportées">${esc(data)}</textarea><button class="btn small" data-act="copy" style="margin-top:6px">Copier</button>`;
+  box.innerHTML=`<p class="muted" style="font-size:calc(13px*var(--ts,1));margin:0 0 6px">Le téléchargement n'est pas disponible ici. Copie ce texte dans un fichier nommé ${esc(name)}.</p><textarea class="dump" id="dump" readonly aria-label="Données exportées">${esc(data)}</textarea><button class="btn small" data-act="copy" style="margin-top:6px">Copier</button>`;
 }
 let importPayload=null;
 /* ids end up in HTML attributes: only the shape uid() produces is accepted from a file */
@@ -1301,7 +1323,7 @@ function openHist(name,exId){
   const rows=sortedSessions().filter(s=>s.exercises.some(x=>x.name===name)).reverse().slice(0,12);
   $("#sheetIn").innerHTML=`<div class="card-head"><h3>${esc(name)}</h3><button class="link" data-act="close-sheet">Fermer</button></div>
     ${ex&&ex.how?`<div class="card" style="margin:10px 0;padding:12px 14px"><div class="eyebrow" style="padding:0 0 4px">Comment faire</div><div class="how">${esc(ex.how)}</div>${/^https?:\/\//i.test(ex.link||"")?`<a class="link" href="${esc(ex.link)}" target="_blank" rel="noopener">Ouvrir la vidéo ↗</a>`:""}</div>`:""}
-    <p class="muted" style="font-size:13px;margin:4px 0 8px">${rows.length?`${rows.length} dernière${rows.length>1?"s":""} séance${rows.length>1?"s":""} · à droite : ${metricLabel(m).toLowerCase()}`:"Pas encore de séance avec cet exercice."}</p>
+    <p class="muted" style="font-size:calc(13px*var(--ts,1));margin:4px 0 8px">${rows.length?`${rows.length} dernière${rows.length>1?"s":""} séance${rows.length>1?"s":""} · à droite : ${metricLabel(m).toLowerCase()}`:"Pas encore de séance avec cet exercice."}</p>
     ${rows.map(s=>{const e=s.exercises.find(x=>x.name===name);const v=exValue(e,m);const d=parseISO(s.date);
       return `<div class="hrow"><span class="d">${DAYS[d.getDay()].slice(0,3)}. ${fmtDateShort(s.date)}</span><span class="num" style="font-weight:700">${v==null?"–":fmt(v)+" "+unit(m)}</span><span class="s">${esc(setsTxt(e))}</span></div>`}).join("")}`;
   showEl($("#sheet"));
@@ -1366,8 +1388,9 @@ function ebRelease(cancel){
   const ms=Math.round(clamp(go&&v>.05?dist/v*1.6:dist*1.1,160,go?320:340));
   const ease=go?`cubic-bezier(.33,${clamp(v*ms/dist*.33,0,1).toFixed(3)},.67,1)`:"cubic-bezier(.32,.72,0,1)";
   const p0=clamp(s.x/w,0,1),p1=go?1:0;
-  const a=main.animate([{transform:`translateX(${s.x}px)`},{transform:`translateX(${to}px)`}],{duration:ms,easing:ease,fill:"forwards"});
-  if(ebGhost){ebGhost.lastElementChild.animate([{opacity:ebGhost._dim*(1-p0)},{opacity:ebGhost._dim*(1-p1)}],{duration:ms,easing:ease,fill:"forwards"})}
+  const sp=!go&&s.x>.5?springEase(.35,1,-(v*1000)/s.x):null,timing=sp?{duration:sp.duration,easing:sp.easing}:{duration:ms,easing:ease};
+  const a=main.animate([{transform:`translateX(${s.x}px)`},{transform:`translateX(${to}px)`}],{...timing,fill:"forwards"});
+  if(ebGhost){ebGhost.lastElementChild.animate([{opacity:ebGhost._dim*(1-p0)},{opacity:ebGhost._dim*(1-p1)}],{...timing,fill:"forwards"})}
   main.style.transform="";
   a.finished.then(()=>{if(eb)return;ebClean();if(go)backFrom()},()=>{});
 }
@@ -1422,7 +1445,8 @@ function sheetRelease(){
   /* no CSS transition under the WAAPI one (it would replay after it); restored once settled */
   sheetIn.style.transition="none";sheetIn.style.transform="";sheetScrim.style.opacity="";if(fromY>=0)sheetFill.style.opacity="";void getComputedStyle(sheetIn).transform;
   if(RM.matches||Math.abs(fromY)<.5){sheetIn.style.transition="";sheetFill.style.opacity="";return}
-  const an=sheetIn.animate([{transform:`translateY(${fromY}px)`},{transform:"none"}],{duration:Math.round(clamp(Math.abs(fromY)*1.2,200,380)),easing:"cubic-bezier(.32,.72,0,1)"});
+  const sp=springEase(.35,1,-(v*1000)/fromY);   /* speed toward rest, in distances per second */
+  const an=sheetIn.animate([{transform:`translateY(${fromY}px)`},{transform:"none"}],sp||{duration:Math.round(clamp(Math.abs(fromY)*1.2,200,380)),easing:"cubic-bezier(.32,.72,0,1)"});
   an.finished.then(()=>{if(!sd){sheetIn.style.transition="";sheetFill.style.opacity=""}},()=>{});
   sheetScrim.animate([{opacity:fromO},{opacity:1}],{duration:250,easing:"ease-out"});
 }
@@ -1459,8 +1483,9 @@ let sw=null,swOpen=null,swSuppress=0;
 /* current on-screen x of a row (mid-transition included): a row caught while it slides stops under the finger */
 const curX=el=>{const t=getComputedStyle(el).transform;return !t||t==="none"?0:new DOMMatrix(t).m41};
 /* release: the row finishes in a time that follows the finger's speed (fast flick = short), drawer curve */
-function slideTo(fg,dist,v,lbl){const ms=RM.matches?0:Math.round(clamp(Math.abs(v)>.05?dist/Math.abs(v):300,180,300));
-  const tr=ms?`transform ${ms}ms var(--ease-drawer)`:"none";fg.style.transition=tr;fg.style.transform="";if(lbl){lbl.style.transition=tr;lbl.style.transform=""}return ms}
+function slideTo(fg,dist,v,lbl,dir){const sp=dir&&!RM.matches&&dist>.5?springEase(.32,1,(v*1000*dir)/dist):null;
+  const ms=RM.matches?0:sp?sp.duration:Math.round(clamp(Math.abs(v)>.05?dist/Math.abs(v):300,180,300));
+  const tr=ms?`transform ${ms}ms ${sp?sp.easing:"var(--ease-drawer)"}`:"none";fg.style.transition=tr;fg.style.transform="";if(lbl){lbl.style.transition=tr;lbl.style.transform=""}return ms}
 /* put a row back to a clean state (inline styles and drag classes gone) */
 function resetRow(row){const fg=row.querySelector(":scope>.swipe-fg"),l=row.querySelector(":scope>.swipe-del .lbl");
   if(fg){fg.style.transition="";fg.style.transform=""}if(l){l.style.transition="";l.style.transform=""}row.classList.remove("dragging","armed");settle(row)}
@@ -1499,7 +1524,7 @@ function endSwipe(){if(!sw)return;const s=sw;sw=null;s.row.classList.remove("dra
   if(s.armed){const row=s.row;slideTo(s.fg,s.w+(s.x??0),s.vx,s.lbl);row.classList.remove("open");if(swOpen===row)swOpen=null;row.classList.add("full");swSuppress=Date.now();
     askDelete(row.dataset.kind,row.dataset.id,()=>unfull(row));if($("#modal").hidden&&row.classList.contains("full"))unfull(row);return}
   const x=s.x??s.base,dx=x-s.base,v=dx/Math.max(1,Date.now()-s.t0);
-  const open=Math.abs(dx)>=20&&Math.abs(v)>.11?v<0:x<-48;const ms=slideTo(s.fg,Math.abs((open?-96:0)-x),s.vx,s.lbl);if(!open)settle(s.row,ms);s.row.classList.remove("armed");s.row.classList.toggle("open",open);
+  const open=Math.abs(dx)>=20&&Math.abs(v)>.11?v<0:x<-48;const ms=slideTo(s.fg,Math.abs((open?-96:0)-x),s.vx,s.lbl,Math.sign((open?-96:0)-x));if(!open)settle(s.row,ms);s.row.classList.remove("armed");s.row.classList.toggle("open",open);
   if(open){if(swOpen&&swOpen!==s.row)closeSwipe();swOpen=s.row}else if(swOpen===s.row)swOpen=null;swSuppress=Date.now()}
 /* touchend / touchcancel as a safety net: endSwipe runs once (sw is cleared on entry) */
 ["pointerup","pointercancel","touchend","touchcancel"].forEach(t=>document.addEventListener(t,endSwipe,{passive:true}));
@@ -1553,7 +1578,7 @@ function suggest(input){
   const q=norm(input.value);if(!q){box.hidden=true;box.innerHTML="";return}
   const hits=S.exercises.filter(e=>norm(e.name).includes(q)||e.steps.some(s=>norm(s.n).includes(q))).sort((a,b)=>(norm(a.name).startsWith(q)?0:1)-(norm(b.name).startsWith(q)?0:1)||a.name.localeCompare(b.name,"fr")).slice(0,6);
   const exact=S.exercises.some(e=>norm(e.name)===q);
-  box.innerHTML=hits.map(e=>`<button data-act="pick-ex" data-kind="${kind}" data-item="${esc(input.dataset.item||"")}" data-id="${e.id}">${esc(e.name)} <span class="muted" style="font-size:13px">· ${esc(exSub(e))}</span></button>`).join("")
+  box.innerHTML=hits.map(e=>`<button data-act="pick-ex" data-kind="${kind}" data-item="${esc(input.dataset.item||"")}" data-id="${e.id}">${esc(e.name)} <span class="muted" style="font-size:calc(13px*var(--ts,1))">· ${esc(exSub(e))}</span></button>`).join("")
     +(exact?"":`<button class="new" data-act="create-ex" data-kind="${kind}" data-item="${esc(input.dataset.item||"")}" data-name="${esc(input.value.trim())}">+ Créer « ${esc(input.value.trim())} »</button>`);
   box.hidden=false;
 }
