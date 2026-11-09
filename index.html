@@ -201,7 +201,7 @@ h3{font-family:var(--f-display);font-weight:600;font-size:calc(17px*var(--ts,1))
 .timer.chain .t{font-size:calc(22px*var(--ts,1))}
 .timer .lbl{font-size:calc(12px*var(--ts,1));opacity:.7;display:block;font-weight:500;letter-spacing:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px}
 .timer button{min-width:48px;height:44px;border-radius:12px;border:0;background:rgba(127,127,127,.25);color:inherit;font-weight:600;font-size:calc(15px*var(--ts,1))}
-.timer.over .in{background:var(--accent);color:var(--accent-ink);animation:pulseFade 1.6s ease-in-out infinite}
+.timer.over .in{background:var(--accent);color:var(--accent-ink)}
 /* rest timer rises just above the tab bar after a set, and leaves the same way */
 .timer .in{transition:transform 250ms var(--ease-out),opacity 200ms ease-out}
 @starting-style{.timer .in{transform:translateY(16px);opacity:0}}
@@ -326,11 +326,9 @@ textarea.dump{width:100%;min-height:140px;border:0;border-radius:10px;background
   .sheet.closing .in,.modal.closing .box{transform:none}
   .toast.closing{transform:translateX(-50%)}
   @starting-style{.sheet .in{transform:none}.modal .box{transform:none}.toast{transform:translateX(-50%)}}
-  .timer.over .in{animation:pulseFade 1.6s ease-in-out infinite}
   .timer.closing .in{transform:none}
   @starting-style{.timer .in{transform:none}}
 }
-@keyframes pulseFade{0%,100%{opacity:1}50%{opacity:.82}}
 
 /* ---- v6 additions ---- */
 .set.c3{grid-template-columns:20px minmax(0,1fr) 50px}
@@ -1483,7 +1481,7 @@ let sw=null,swOpen=null,swSuppress=0;
 /* current on-screen x of a row (mid-transition included): a row caught while it slides stops under the finger */
 const curX=el=>{const t=getComputedStyle(el).transform;return !t||t==="none"?0:new DOMMatrix(t).m41};
 /* release: the row finishes in a time that follows the finger's speed (fast flick = short), drawer curve */
-function slideTo(fg,dist,v,lbl,dir){const sp=dir&&!RM.matches&&dist>.5?springEase(.32,1,(v*1000*dir)/dist):null;
+function slideTo(fg,dist,v,lbl,dir){const sp=dir&&!RM.matches&&dist>.5?springEase(.4,1,Math.min(8,(v*1000*dir)/dist)):null;
   const ms=RM.matches?0:sp?sp.duration:Math.round(clamp(Math.abs(v)>.05?dist/Math.abs(v):300,180,300));
   const tr=ms?`transform ${ms}ms ${sp?sp.easing:"var(--ease-drawer)"}`:"none";fg.style.transition=tr;fg.style.transform="";if(lbl){lbl.style.transition=tr;lbl.style.transform=""}return ms}
 /* put a row back to a clean state (inline styles and drag classes gone) */
@@ -1491,7 +1489,11 @@ function resetRow(row){const fg=row.querySelector(":scope>.swipe-fg"),l=row.quer
   if(fg){fg.style.transition="";fg.style.transform=""}if(l){l.style.transition="";l.style.transform=""}row.classList.remove("dragging","armed");settle(row)}
 /* while a row slides back, its red layer stays visible (no empty gap) */
 function settle(row,ms){row.classList.add("settling");clearTimeout(row._setT);row._setT=setTimeout(()=>row.classList.remove("settling"),(ms??300)+40)}
-function closeSwipe(){if(swOpen){const r=swOpen;swOpen=null;r.classList.remove("open");resetRow(r)}}
+/* an open row closed by a touch elsewhere: a spring from rest (no initial speed) so it eases off instead of jumping away */
+function closeSwipe(){if(!swOpen)return;const r=swOpen;swOpen=null;r.classList.remove("open");
+  const sp=RM.matches?null:springEase(.42,1,0);if(!sp){resetRow(r);return}
+  const fg=r.querySelector(":scope>.swipe-fg"),l=r.querySelector(":scope>.swipe-del .lbl"),tr=`transform ${sp.duration}ms ${sp.easing}`;
+  [fg,l].forEach(e=>{if(e){e.style.transition=tr;e.style.transform=""}});r.classList.remove("dragging","armed");settle(r,sp.duration)}
 document.addEventListener("pointerdown",ev=>{
   if(ev.isPrimary===false)return;
   /* a gesture whose end never arrived (seen on iOS) is finished now, as if released: no row may stay stuck half-way */
