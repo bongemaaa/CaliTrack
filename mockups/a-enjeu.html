@@ -1,0 +1,261 @@
+<title>CaliTrack A · Enjeu</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Mise en page : une colonne iPhone. La carte cobalt porte l'enjeu du jour, le reste est en listes groupées iOS, barre d'onglets fixe. */
+:root{
+  --bg:#F2F2F7;--card:#FFFFFF;--ink:#111114;--muted:#6E6E78;--line:#DCDCE3;--track:#E1E1E8;
+  --accent:#2457F5;--accent-text:#1E4AD9;--accent-soft:#E7EDFF;
+  --hero:#2457F5;--hero-ink:#FFFFFF;--hero-sub:rgba(255,255,255,.8);--hero-chip:rgba(255,255,255,.16);
+  --good:#18924D;--good-soft:#DCF2E5;
+  --bar:rgba(249,249,251,.86);--scrim:rgba(0,0,0,.35);--press:rgba(120,120,128,.16);
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,"Helvetica Neue",Arial,sans-serif;
+  --round:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,"Helvetica Neue",Arial,sans-serif;
+  --ease-out:cubic-bezier(.23,1,.32,1);--ease-drawer:cubic-bezier(.32,.72,0,1);
+  --r:14px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#000000;--card:#1C1C1E;--ink:#F5F5F7;--muted:#9A9AA3;--line:#38383D;--track:#2C2C2E;
+  --accent:#4C7BFF;--accent-text:#7FA0FF;--accent-soft:#18233F;
+  --hero:#2457F5;--good:#3DD27A;--good-soft:#12301D;
+  --bar:rgba(22,22,24,.86);--scrim:rgba(0,0,0,.6);--press:rgba(120,120,128,.28);color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#000000;--card:#1C1C1E;--ink:#F5F5F7;--muted:#9A9AA3;--line:#38383D;--track:#2C2C2E;
+  --accent:#4C7BFF;--accent-text:#7FA0FF;--accent-soft:#18233F;
+  --hero:#2457F5;--good:#3DD27A;--good-soft:#12301D;
+  --bar:rgba(22,22,24,.86);--scrim:rgba(0,0,0,.6);--press:rgba(120,120,128,.28);color-scheme:dark}
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--ink);font:16px/1.35 var(--font);-webkit-font-smoothing:antialiased;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+h1,h2,h3,p{margin:0}
+.app{max-width:430px;margin:0 auto;padding-block:12px 110px;display:flex;flex-direction:column;gap:22px}
+.press{transition:transform .16s var(--ease-out),opacity .16s var(--ease-out)}
+.press:active{transform:scale(.97)}
+
+.date{color:var(--muted);font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.trow{display:flex;align-items:center;justify-content:space-between;gap:12px}
+h1{font-size:34px;font-weight:700;letter-spacing:-.01em}
+.chip{font-size:14px;font-weight:600;color:var(--accent-text);background:var(--accent-soft);padding:8px 14px;border-radius:99px;min-height:36px}
+
+.hero{background:var(--hero);color:var(--hero-ink);border-radius:22px;padding:20px;display:flex;flex-direction:column;gap:6px}
+.hero .eyebrow{font-size:13px;font-weight:600;color:var(--hero-sub)}
+.hero h2{font-size:28px;font-weight:700;letter-spacing:-.01em;line-height:1.12;text-wrap:balance}
+.hero .meta{font-size:15px;color:var(--hero-sub);font-variant-numeric:tabular-nums}
+.stake{display:flex;align-items:center;gap:8px;align-self:flex-start;background:var(--hero-chip);border-radius:10px;padding:8px 12px;margin-top:10px;font-size:15px}
+.stake b{font-family:var(--round);font-weight:700}
+.stake svg{flex:none}
+.cta{margin-top:14px;background:var(--hero-ink);color:var(--hero);font-weight:700;font-size:17px;border-radius:14px;min-height:52px}
+.hero.rest{background:var(--card);color:var(--ink)}
+.hero.rest .eyebrow,.hero.rest .meta{color:var(--muted)}
+.hero.rest .stake{background:var(--accent-soft);color:var(--accent-text)}
+
+.sec{display:flex;flex-direction:column;gap:8px}
+.sec h3{font-size:20px;font-weight:700}
+.card{background:var(--card);border-radius:var(--r);overflow:hidden}
+.foot{font-size:13px;color:var(--muted);padding-inline:4px}
+
+/* lignes « en jeu » */
+.bet{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:center;width:100%;text-align:left;padding:14px 16px;position:relative}
+.bet+.bet{border-top:.5px solid var(--line)}
+.bet:active{background:var(--press)}
+.bet .n{font-weight:600;font-size:17px}
+.bet .s{grid-column:1/-1;font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums}
+.bet .s b{color:var(--ink);font-weight:600}
+.gauge{display:flex;align-items:center;gap:8px}
+.seg{display:flex;gap:4px}
+.seg i{display:block;width:26px;height:8px;border-radius:4px;background:var(--track);overflow:hidden;position:relative}
+.seg i::after{content:"";position:absolute;inset:0;background:var(--accent);border-radius:4px;transform:scaleX(0);transform-origin:left;transition:transform .5s var(--ease-out)}
+.seg i.on::after{transform:scaleX(1)}
+.bet.won .seg i::after{background:var(--good)}
+.tag{font-family:var(--round);font-weight:700;font-size:14px;color:var(--muted);min-width:64px;text-align:right;font-variant-numeric:tabular-nums}
+.bet.won .tag{color:var(--good)}
+
+/* semaine */
+.week{padding:14px 10px 12px}
+.days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));position:relative}
+.pill{position:absolute;top:0;left:0;width:calc(100%/7);height:100%;padding:0 3px;transition:transform .38s var(--ease-drawer);pointer-events:none}
+.pill::after{content:"";display:block;height:100%;border-radius:12px;background:var(--accent-soft)}
+.day{position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;padding:8px 0 10px;min-height:64px;font-size:12px;font-weight:600;color:var(--muted)}
+.day[aria-pressed="true"]{color:var(--accent-text)}
+.dot{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;border:2px solid var(--track)}
+.day.done .dot{background:var(--good);border-color:var(--good);color:#fff}
+.day.today .dot{border-color:var(--accent)}
+.day.today .dot::after{content:"";width:8px;height:8px;border-radius:50%;background:var(--accent)}
+.day.plan .dot{border-style:dashed;border-color:var(--muted)}
+.day.off .dot{border-color:transparent}
+.day.off .dot::after{content:"";width:6px;height:2px;border-radius:1px;background:var(--track)}
+.dinfo{border-top:.5px solid var(--line);margin:10px 6px 0;padding-top:12px;min-height:58px}
+.dinfo .t{font-weight:600}
+.dinfo .d{font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+/* figures */
+.fig{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;padding:13px 16px;align-items:baseline}
+.fig+.fig{border-top:.5px solid var(--line)}
+.fig .n{font-weight:600}
+.fig .n span{font-weight:400;color:var(--muted);font-size:14px}
+.fig .c{font-family:var(--round);font-weight:700;font-size:15px;color:var(--accent-text);font-variant-numeric:tabular-nums}
+.steps{grid-column:1/-1;display:flex;gap:3px}
+.steps i{flex:1;height:6px;border-radius:3px;background:var(--track)}
+.steps i.on{background:var(--accent)}
+
+/* barre d'onglets */
+.tabs{position:fixed;inset:auto 0 0;z-index:5;background:var(--bar);-webkit-backdrop-filter:saturate(180%) blur(30px);backdrop-filter:saturate(180%) blur(30px);border-top:.5px solid var(--line);
+  padding:6px max(8px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px))}
+.tabs div{max-width:430px;margin:0 auto;display:grid;grid-template-columns:repeat(5,minmax(0,1fr))}
+.tab{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;font-weight:600;color:var(--muted);padding:4px 0;min-height:46px}
+.tab[aria-current]{color:var(--accent-text)}
+
+/* feuille Direction */
+.scrim{position:fixed;inset:0;z-index:8;background:var(--scrim);opacity:0;pointer-events:none;transition:opacity .25s ease}
+.sheet{position:fixed;inset:auto 0 0;z-index:9;margin:0 auto;max-width:430px;max-height:86%;overflow:auto;background:var(--bg);border-radius:18px 18px 0 0;
+  padding:10px max(16px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));
+  transform:translateY(100%);visibility:hidden;transition:transform .28s var(--ease-drawer),visibility 0s .28s;display:flex;flex-direction:column;gap:14px}
+.open .scrim{opacity:1;pointer-events:auto}
+.open .sheet{transform:none;visibility:visible;transition:transform .45s var(--ease-drawer),visibility 0s}
+.grab{width:36px;height:5px;border-radius:3px;background:var(--line);align-self:center}
+.sheet h2{font-size:22px;font-weight:700}
+.sheet h4{margin:0 0 6px;font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.sheet p,.sheet li{font-size:15px}
+.sheet ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
+.sw{display:flex;flex-wrap:wrap;gap:8px}
+.sw span{display:flex;align-items:center;gap:6px;font-size:13px;font-variant-numeric:tabular-nums;background:var(--card);border-radius:8px;padding:6px 8px}
+.sw i{width:18px;height:18px;border-radius:5px;border:.5px solid var(--line)}
+.btn{background:var(--card);color:var(--accent-text);font-weight:600;border-radius:12px;min-height:48px;width:100%}
+.btn.pri{background:var(--accent);color:#fff}
+@media (prefers-reduced-motion:reduce){.press:active{transform:none}.pill,.seg i::after{transition-duration:0s}.sheet,.open .sheet{transition:visibility 0s}}
+</style>
+
+<div class="app" id="app">
+  <header data-in>
+    <p class="date">jeudi 12 novembre</p>
+    <div class="trow"><h1>Aujourd'hui</h1><button class="chip press" id="openDir" type="button">Direction</button></div>
+  </header>
+
+  <section class="hero" id="heroTrain" data-in>
+    <p class="eyebrow">Séance du jour</p>
+    <h2>Lower B + Core B</h2>
+    <p class="meta">9 exercices · 29 séries · environ 70 min</p>
+    <div class="stake"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 13V3M3.5 7.5 8 3l4.5 4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>2 level ups</b> en jeu</span></div>
+    <button class="cta press" type="button">Commencer</button>
+  </section>
+
+  <section class="hero rest" id="heroRest" hidden data-in>
+    <p class="eyebrow">Repos</p>
+    <h2>Demain : Upper B</h2>
+    <p class="meta">7 exercices · 25 séries · environ 60 min</p>
+    <div class="stake"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 13V3M3.5 7.5 8 3l4.5 4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span><b>1 level up</b> en jeu : Dips, 25 kg</span></div>
+  </section>
+
+  <section class="sec" data-in>
+    <h3>En jeu aujourd'hui</h3>
+    <div class="card">
+      <button class="bet" type="button" data-win="+2 kg" aria-pressed="false">
+        <span class="n">Fentes bulgares</span>
+        <span class="gauge"><span class="seg"><i class="on"></i><i></i></span><span class="tag">1 sur 2</span></span>
+        <span class="s">Dernière fois <b>10 · 10 · 10</b> à 20 kg. Refais 3 × 10 : la charge passe à 22 kg.</span>
+      </button>
+      <button class="bet" type="button" data-win="Étape 4" aria-pressed="false">
+        <span class="n">Box pistol squat</span>
+        <span class="gauge"><span class="seg"><i class="on"></i><i></i></span><span class="tag">1 sur 2</span></span>
+        <span class="s">Dernière fois <b>8 · 8 · 8</b>, hauteur +2. Refais 3 × 8 : tu passes à hauteur +1.</span>
+      </button>
+    </div>
+    <p class="foot">Maquette : touche une ligne pour simuler une séance réussie.</p>
+  </section>
+
+  <section class="sec" data-in>
+    <h3>Cette semaine</h3>
+    <div class="card week">
+      <div class="days" id="days">
+        <span class="pill" id="pill"></span>
+        <button class="day done" type="button">L<span class="dot"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.5 5 9l4.5-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+        <button class="day done" type="button">M<span class="dot"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.5 5 9l4.5-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
+        <button class="day off" type="button">M<span class="dot"></span></button>
+        <button class="day today" type="button">J<span class="dot"></span></button>
+        <button class="day plan" type="button">V<span class="dot"></span></button>
+        <button class="day plan" type="button">S<span class="dot"></span></button>
+        <button class="day off" type="button">D<span class="dot"></span></button>
+      </div>
+      <div class="dinfo" id="dinfo" aria-live="polite"><p class="t"></p><p class="d"></p></div>
+    </div>
+    <p class="foot">2 séances sur 5 · 6 semaines tenues d'affilée</p>
+  </section>
+
+  <section class="sec" data-in>
+    <h3>Figures</h3>
+    <div class="card" id="figs"></div>
+    <p class="foot">Données d'exemple, tirées des routines du programme.</p>
+  </section>
+</div>
+
+<nav class="tabs" aria-label="Onglets"><div>
+  <button class="tab" type="button" aria-current="page"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>Aujourd'hui</button>
+  <button class="tab" type="button"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Routines</button>
+  <button class="tab" type="button"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h18M6 8v8M18 8v8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Exercices</button>
+  <button class="tab" type="button"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 17l5-5 4 3 7-8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Progrès</button>
+  <button class="tab" type="button"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 8v4l3 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Historique</button>
+</div></nav>
+
+<div class="scrim" id="scrim"></div>
+<aside class="sheet" id="sheet" aria-label="Direction A">
+  <span class="grab"></span>
+  <h2>A · Enjeu</h2>
+  <p>L'app actuelle, avec un écran d'accueil qui répond à une question : qu'est-ce qui se joue aujourd'hui ? La règle de level up sur 2 séances devient visible avant la séance.</p>
+  <div><h4>Palette</h4><div class="sw">
+    <span><i style="background:#2457F5"></i>#2457F5 cobalt</span><span><i style="background:#F2F2F7"></i>#F2F2F7 fond</span>
+    <span><i style="background:#111114"></i>#111114 texte</span><span><i style="background:#18924D"></i>#18924D validé</span></div></div>
+  <div><h4>Typographie</h4><p>SF Pro pour tout. SF Rounded pour les chiffres de progression (1 sur 2, 3/10). Aucun fichier de police.</p></div>
+  <div><h4>Progression visible</h4><ul><li>Jauge à 2 crans par exercice proche du level up.</li><li>Semaine en 7 points, régularité comptée en semaines tenues.</li><li>Figures en segments d'étapes.</li></ul></div>
+  <div><h4>Mouvement</h4><ul><li>Entrée en cascade, 50 ms entre blocs, une fois à l'ouverture.</li><li>Jauge : scaleX, 500 ms, ease-out fort.</li><li>Pastille du jour : translateX, 380 ms, courbe drawer.</li><li>Appui : scale 0,97 en 160 ms.</li></ul></div>
+  <button class="btn" id="toggleRest" type="button">Voir un jour de repos</button>
+  <button class="btn" id="replay" type="button">Rejouer l'entrée</button>
+  <button class="btn pri" id="closeDir" type="button">Fermer</button>
+</aside>
+
+<script>
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+document.addEventListener('touchstart',()=>{},{passive:true}); // Safari iOS : active :active
+
+// Figures (étapes réelles du programme)
+const FIGS=[["Handstand","Dos au mur",1,6],["L-sit","L-sit une jambe",3,9],["Box pistol squat","Hauteur +2",3,10],["HSPU","Pike pieds surélevés",2,7]];
+$('#figs').innerHTML=FIGS.map(([n,s,l,t])=>`<div class="fig"><span class="n">${n} <span>· ${s}</span></span><span class="c">${l}/${t}</span><span class="steps">${Array.from({length:t},(_,i)=>`<i class="${i<l?'on':''}"></i>`).join('')}</span></div>`).join('');
+
+// Semaine
+const DAYS=[["Lundi · Lower A + Core A","Fait en 58 min · 9 exercices"],["Mardi · Upper A","Fait en 1 h 04 · record : Tractions pronation 15 kg × 8"],["Mercredi · Repos",""],["Aujourd'hui · Lower B + Core B","2 level ups en jeu"],["Vendredi · Upper B","Prévu · 1 level up en jeu"],["Samedi · Skills + Core C","Prévu · Handstand, HSPU, L-sit test max"],["Dimanche · Repos",""]];
+const dayBtns=$$('.day'),info=$('#dinfo');
+function pickDay(i,anim){
+  dayBtns.forEach((b,j)=>b.setAttribute('aria-pressed',j===i));
+  $('#pill').style.transform=`translateX(${i*100}%)`;
+  info.firstElementChild.textContent=DAYS[i][0];info.lastElementChild.textContent=DAYS[i][1];
+  if(anim)info.animate([{opacity:0},{opacity:1}],{duration:200,easing:'ease'});
+}
+dayBtns.forEach((b,i)=>b.addEventListener('click',()=>pickDay(i,true)));
+pickDay(3,false);
+
+// Enjeu : simuler une séance réussie
+$$('.bet').forEach(b=>b.addEventListener('click',()=>{
+  const won=b.classList.toggle('won');b.setAttribute('aria-pressed',won);
+  b.querySelector('.seg').lastElementChild.classList.toggle('on',won);
+  const tag=b.querySelector('.tag');tag.textContent=won?b.dataset.win:'1 sur 2';
+  tag.animate([{opacity:0,transform:RM?'none':'translateY(4px)'},{opacity:1,transform:'none'}],{duration:220,easing:'cubic-bezier(.23,1,.32,1)'});
+}));
+
+// Entrée
+function enter(){
+  $$('[data-in]').filter(e=>!e.hidden).forEach((el,i)=>el.animate([{opacity:0,transform:RM?'none':'translateY(10px)'},{opacity:1,transform:'none'}],{duration:420,delay:i*50,easing:'cubic-bezier(.23,1,.32,1)',fill:'backwards'}));
+}
+enter();
+
+// Feuille
+const root=document.body;
+const openS=()=>root.classList.add('open'),closeS=()=>root.classList.remove('open');
+$('#openDir').onclick=openS;$('#closeDir').onclick=closeS;$('#scrim').onclick=closeS;
+$('#replay').onclick=()=>{closeS();scrollTo(0,0);enter()};
+$('#toggleRest').onclick=e=>{
+  const rest=$('#heroRest').hidden;$('#heroRest').hidden=!rest;$('#heroTrain').hidden=rest;
+  e.currentTarget.textContent=rest?'Voir un jour de séance':'Voir un jour de repos';closeS();scrollTo(0,0);enter();
+};
+</script>

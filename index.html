@@ -102,6 +102,50 @@ h3{font-family:var(--f-display);font-weight:600;font-size:calc(17px*var(--ts,1))
 .card-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
 .go{font-weight:600;color:var(--accent-text);font-size:calc(15px*var(--ts,1));white-space:nowrap}
 
+/* ===== Aujourd'hui : séance du jour, level ups en jeu, semaine ===== */
+.td-hero{background:#2457F5;color:#fff;border-radius:22px;padding:20px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.td-eb{font-size:calc(13px*var(--ts,1));font-weight:600;color:rgba(255,255,255,.86)}
+.td-name{font-family:var(--f-display);font-weight:700;font-size:calc(28px*var(--ts,1));line-height:1.12;letter-spacing:-.02em;text-wrap:balance;overflow-wrap:anywhere}
+.td-meta{font-size:calc(15px*var(--ts,1));color:rgba(255,255,255,.86);font-variant-numeric:tabular-nums}
+.td-stake{display:flex;align-items:center;gap:8px;align-self:flex-start;background:rgba(255,255,255,.16);border-radius:10px;padding:8px 12px;margin-top:10px;font-size:calc(15px*var(--ts,1))}
+.td-stake b,.td-tag{font-family:ui-rounded,"SF Pro Rounded",var(--f-display);font-weight:700}
+.td-stake svg{flex:none;width:16px;height:16px}
+.td-cta{margin-top:14px;border:0;background:#fff;color:#2457F5;font-weight:700;font-size:calc(17px*var(--ts,1));border-radius:14px;min-height:52px;transition:transform 160ms var(--ease-out),opacity 200ms ease-out}
+.td-cta:active{transform:scale(.97);opacity:.85;transition-duration:0ms}
+.td-hero.is-done{background:var(--card);color:var(--ink)}
+.td-hero.is-done .td-eb{color:var(--good)}
+.td-hero.is-done .td-meta{color:var(--muted)}
+.td-hero.is-done .td-stake,.td-hero.is-done .td-cta{background:var(--accent-soft);color:var(--accent-text)}
+.card.td-list{padding:0;overflow:hidden}
+.td-bet{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:center;padding:14px 16px}
+.td-bet+.td-bet{border-top:.5px solid var(--line)}
+.td-n{font-weight:600;font-size:calc(17px*var(--ts,1));overflow-wrap:anywhere}
+.td-s{grid-column:1/-1;font-size:calc(14px*var(--ts,1));color:var(--muted);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.td-s b{color:var(--ink);font-weight:600}
+.td-g{display:flex;align-items:center;gap:8px}
+.td-seg{display:flex;gap:4px}
+.td-seg i{display:block;width:26px;height:8px;border-radius:4px;background:var(--track)}
+.td-seg i.on{background:var(--accent)}
+.td-tag{font-size:calc(14px*var(--ts,1));color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.td-bet.is-ready .td-seg i{background:var(--good)}
+.td-bet.is-ready .td-tag{color:var(--good)}
+.card.td-week{padding:14px 10px 12px}
+.td-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));position:relative}
+.td-pill{position:absolute;top:0;left:0;width:calc(100%/7);height:100%;padding:0 3px;transition:transform 380ms var(--ease-drawer);pointer-events:none}
+.td-pill::after{content:"";display:block;height:100%;border-radius:12px;background:var(--accent-soft)}
+.td-day{position:relative;background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:8px;padding:8px 0 10px;min-height:64px;font-size:calc(12px*var(--ts,1));font-weight:600;color:var(--muted)}
+.td-day[aria-pressed="true"]{color:var(--accent-text)}
+.td-dot{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;border:2px solid var(--track)}
+.td-dot svg{width:12px;height:12px}
+.td-day.is-done .td-dot{background:var(--good);border-color:var(--good);color:#fff}
+.td-day.is-now .td-dot{border-color:var(--accent)}
+.td-day.is-now .td-dot::after{content:"";width:8px;height:8px;border-radius:50%;background:var(--accent)}
+.td-day.is-off .td-dot{border-color:transparent}
+.td-day.is-off .td-dot::after{content:"";width:6px;height:2px;border-radius:1px;background:var(--line)}
+.td-info{border-top:.5px solid var(--line);margin:10px 6px 0;padding-top:12px;min-height:calc(58px*var(--ts,1))}
+.td-info .t{font-weight:600;overflow-wrap:anywhere}
+.td-info .d{font-size:calc(14px*var(--ts,1));color:var(--muted);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+
 .btn{min-height:50px;padding:0 18px;border-radius:12px;border:0;background:var(--accent-soft);color:var(--accent-text);font-weight:600;font-size:calc(17px*var(--ts,1))}
 .btn.primary{background:var(--accent);color:var(--accent-ink)}
 .btn.block{width:100%}
@@ -321,7 +365,8 @@ textarea.dump{width:100%;min-height:140px;border:0;border-radius:10px;background
 .empty{padding:22px 14px;text-align:center;color:var(--muted)}
 /* reduced motion = no movement, but fades and colour changes stay (they are feedback, not motion) */
 @media (prefers-reduced-motion: reduce){
-  .btn.block:active,.done:active,.card.tap:active{transform:none}
+  .btn.block:active,.done:active,.card.tap:active,.td-cta:active{transform:none}
+  .td-pill{transition:none}
   .done.pop path{animation:none}
   .sheet.closing .in,.modal.closing .box{transform:none}
   .toast.closing{transform:translateX(-50%)}
@@ -725,6 +770,50 @@ function judge(e,item,ex,t){
 }
 function history(item,ex){const nm=dispName(ex);return sortedSessions().filter(s=>(s.start||0)>(item.since||0)).map(s=>({s,e:s.exercises.find(x=>x.rx===item.id&&x.name===nm)})).filter(h=>h.e).reverse()}
 function streakOf(item,ex){const t=engineT(item,ex);if(!t)return null;const h=history(item,ex);if(!h.length)return null;const j=judge(h[0].e,item,ex,t);return j==="mid"?null:j}
+/* ================= Aujourd'hui : tout est calculé à l'affichage, rien n'est enregistré ================= */
+/* routine du jour = celle qui suit, dans l'ordre des routines, celle de la dernière séance */
+function nextRoutine(){
+  if(!S.routines.length)return null;const ss=sortedSessions();
+  for(let i=ss.length-1;i>=0;i--){let k=S.routines.findIndex(r=>r.id===ss[i].routineId);if(k<0)k=S.routines.findIndex(r=>r.name===ss[i].routine);if(k>=0)return S.routines[(k+1)%S.routines.length]}
+  return S.routines[0];
+}
+const doneToday=()=>{const k=iso(new Date());return S.sessions.some(s=>s.date===k)};
+const durTxt=ms=>{const m=Math.max(1,Math.round(ms/60000));return m<60?m+" min":Math.floor(m/60)+" h "+pad(m%60)};
+function routineEst(r){let n=0,sec=0;r.items.forEach(i=>{const ex=exById(i.ex);if(!ex)return;const k=ex.mode==="kick"?1:Math.max(1,i.sets||1);n+=k;sec+=k*((i.rest||90)+40)});
+  return{ex:r.items.filter(i=>exById(i.ex)).length,sets:n,min:Math.max(5,Math.round(sec/300)*5)}}
+function lastTxt(e){const kgs=[...new Set(e.sets.map(x=>+x.kg||0))];
+  return{v:e.sets.map(x=>x.g!=null&&x.g!==x.d?x.g+"/"+x.d:valOf(x,e.mode)).join(" · ")+(e.mode==="sec"?" s":""),kg:kgs.length===1&&kgs[0]>0?fmt(kgs[0])+" kg":""}}
+/* ce qui se joue : exercices à 1 séance du level up (haut atteint la dernière fois), et level ups déjà acquis */
+function stakes(r){const out=[];
+  r.items.forEach(item=>{const ex=exById(item.ex);if(!ex)return;
+    if(item.pending){if(item.pending.dir==="up")out.push({ready:true,name:dispName(ex),txt:item.pending.auto?esc(item.pending.from)+" → <b>"+esc(item.pending.to)+"</b>":esc(item.pending.msg)});return}
+    if(streakOf(item,ex)!=="top")return;const t=engineT(item,ex),h=history(item,ex)[0],l=lastTxt(h.e);let nx;
+    if(ex.prog==="etapes"&&ex.steps.length)nx=(ex.lvl||0)+1<ex.steps.length?"tu passes à "+stepLabel(ex,(ex.lvl||0)+1):"dernière étape validée";
+    else if(ex.prog==="charge")nx="la charge passe à "+kgTxt(r2((item.kg||0)+(ex.incr||(ex.halt?1:2.5))),ex.lest);
+    else if(ex.prog==="duree")nx="l'objectif monte de 5 s";
+    else nx="signal pour durcir l'exercice";
+    out.push({ready:false,name:dispName(ex),txt:"Dernière fois <b>"+esc(l.v)+"</b>"+(l.kg?" à "+esc(l.kg):"")+". Refais "+t.sets+" × "+t.hi+unitOf(ex.mode)+" : "+esc(nx)+"."})});
+  return out}
+function weekCounts(){const m={};S.sessions.forEach(s=>{if(!s.date)return;const k=iso(mondayOf(parseISO(s.date)));m[k]=(m[k]||0)+1});return m}
+/* semaines d'affilée à l'objectif (= nombre de routines) ; la semaine en cours ne compte que si elle y est déjà */
+function weeksHeld(){const N=S.routines.length;if(!N)return 0;const m=weekCounts(),w=mondayOf(new Date());let k=(m[iso(w)]||0)>=N?1:0;
+  for(;;){w.setDate(w.getDate()-7);if((m[iso(w)]||0)>=N)k++;else return k}}
+let tdDays=[];
+function weekDays(next,nStake){const mon=mondayOf(new Date()),tk=iso(new Date());tdDays=[];
+  for(let i=0;i<7;i++){const d=new Date(mon);d.setDate(mon.getDate()+i);const k=iso(d),ss=S.sessions.filter(s=>s.date===k),nm=DAYS[d.getDay()],cap=nm[0].toUpperCase()+nm.slice(1);
+    let st,t,sub="";
+    if(ss.length){st="is-done";t=(k===tk?"Aujourd'hui":cap)+" · "+ss.map(s=>rName(s.routine)).join(", ");const ms=ss.reduce((a,s)=>a+Math.max(0,(s.end||0)-(s.start||0)),0),ne=ss.reduce((a,s)=>a+s.exercises.length,0);sub="Fait en "+durTxt(ms)+" · "+ne+" exercice"+(ne>1?"s":"")}
+    else if(k===tk){st="is-now";t="Aujourd'hui"+(next?" · "+rName(next.name):"");sub=nStake?nStake+" level up"+(nStake>1?"s":"")+" en jeu":next?"À faire":""}
+    else if(k<tk){st="is-off";t=cap+" · Repos"}
+    else{st="";t=cap;sub="À venir"}
+    tdDays.push({st,t,sub,l:nm[0].toUpperCase(),n:ss.length,today:k===tk})}
+  return tdDays}
+function pickDay(i){const d=tdDays[i];if(!d)return;ui.day=i;
+  main.querySelectorAll(".td-day").forEach((b,j)=>b.setAttribute("aria-pressed",j===i?"true":"false"));
+  const p=main.querySelector(".td-pill"),inf=main.querySelector(".td-info");if(p)p.style.transform=`translateX(${i*100}%)`;
+  if(inf){inf.innerHTML=`<div class="t">${esc(d.t)}</div><div class="d">${esc(d.sub)}</div>`;if(inf.animate)inf.animate([{opacity:0},{opacity:1}],{duration:200,easing:"ease"})}}
+/* entrée en cascade : à l'ouverture de l'app et à l'arrivée sur l'onglet, jamais au re-rendu */
+function tdEnter(){if(ui.tab!=="enregistrer"||draft)return;main.querySelectorAll("[data-in]").forEach((el,i)=>enter(el,10,i*50,420))}
 function applyVerdict(item,ex,dir,at){
   const before={kg:item.kg,lo:item.lo,hi:item.hi,ext:item.ext||0,lvl:ex.lvl};
   let from="",to="",auto=false,msg="",alt=false,shared=false;
@@ -781,7 +870,7 @@ const I={
  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'
 };
 const CHEV='<svg class="chev" viewBox="0 0 8 13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 1.5l5 5-5 5"/></svg>';
-const TABS=[["enregistrer","Enregistrer",I.rec],["routines","Routines",I.list],["exercices","Exercices",I.book],["progres","Progrès",I.prog],["historique","Historique",I.cal]];
+const TABS=[["enregistrer","Aujourd'hui",I.rec],["routines","Routines",I.list],["exercices","Exercices",I.book],["progres","Progrès",I.prog],["historique","Historique",I.cal]];
 
 /* ================= theme ================= */
 function effectiveDark(){const t=document.documentElement.getAttribute("data-theme");if(t)return t==="dark";return window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches}
@@ -814,10 +903,10 @@ let navRaf=0;["scroll","resize"].forEach(t=>window.addEventListener(t,()=>{if(!n
    Tapping quickly fades from the current opacity, so it never blinks. Same tab with nothing to close: back to the top. */
 function go(tab){
   if(tab===ui.tab&&!ui.editRoutine&&!ui.editEx){window.scrollTo({top:0,behavior:RM.matches?"auto":"smooth"});return}
-  const changed=tab!==ui.tab;ui.tab=tab;ui.editRoutine=null;ui.editEx=null;saveUI();try{if(location.hash!=="#"+tab)window.history.replaceState(null,"","#"+tab)}catch(e){}
+  const changed=tab!==ui.tab;ui.tab=tab;ui.day=null;ui.editRoutine=null;ui.editEx=null;saveUI();try{if(location.hash!=="#"+tab)window.history.replaceState(null,"","#"+tab)}catch(e){}
   const from=+getComputedStyle(main).opacity;render();window.scrollTo(0,0);updNav();
   if(!changed){navAnim(-1);return}
-  if(main.animate){main.getAnimations().forEach(a=>a.cancel());main.animate([{opacity:Math.min(from,.4)},{opacity:1}],{duration:150,easing:"ease-out"})}}
+  if(main.animate){main.getAnimations().forEach(a=>a.cancel());main.animate([{opacity:Math.min(from,.4)},{opacity:1}],{duration:150,easing:"ease-out"})}tdEnter()}
 /* Progrès: the card that holds the curve (first card of the stack) */
 const chartCard=()=>main.querySelector(".stack>.card");
 /* opening a routine / exercise slides in lightly from the right, going back from the left (iOS push / pop, 16 px = the side margin, so nothing overflows the screen) */
@@ -854,7 +943,8 @@ function vBilan(){
 }
 function vRecord(){
   if(draft)return draft.check?vWrist():vLive();
-  const cards=S.routines.map(r=>{
+  const next=nextRoutine(),done=doneToday(),sk=next?stakes(next):[],nSt=sk.filter(x=>!x.ready).length;
+  const card=r=>{
     const its=r.items.filter(i=>exById(i.ex));let gi=0;
     const chips=blocks(its).map(b=>{if(b.length===1){const nm=esc(dispName(exById(its[b[0]].ex)));return `<span class="chip" title="${nm}">${nm}</span>`}
       const L=LETTERS[gi++%10];return b.map((i,k)=>{const nm=esc(dispName(exById(its[i].ex)));return `<span class="chip" title="${nm}"><b>${L}${k+1}</b>${nm}</span>`}).join("")}).join("");
@@ -862,10 +952,32 @@ function vRecord(){
     return `<button class="card tap" data-act="start" data-id="${r.id}">
       <div class="card-head"><h3>${esc(rName(r.name))}</h3><span class="go">Démarrer →</span></div>
       ${ups||downs?`<div class="row" style="margin-top:8px;gap:6px">${ups?`<span class="streak up">↑ ${ups} level up</span>`:""}${downs?`<span class="streak down">↓ ${downs} régression${downs>1?"s":""}</span>`:""}</div>`:""}
-      <div class="chips">${chips||'<span class="muted">Aucun exercice</span>'}</div></button>`}).join("");
-  return `<h1>Enregistrer</h1><div class="stack">${vBilan()}
-    <div class="eyebrow sec">Choisis une routine</div>
-    ${cards||'<div class="card empty">Aucune routine. Crée-en une dans l\'onglet Routines.</div>'}
+      <div class="chips">${chips||'<span class="muted">Aucun exercice</span>'}</div></button>`};
+  const arrow='<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 13V3M3.5 7.5 8 3l4.5 4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  let hero="";
+  if(next){const e=routineEst(next);
+    hero=`<div class="td-hero${done?" is-done":""}" data-in>
+      <div class="td-eb">${done?"Séance faite aujourd'hui":"Séance du jour"}</div>
+      <div class="td-name">${done?"Prochaine : ":""}${esc(rName(next.name))}</div>
+      <div class="td-meta">${e.ex} exercice${e.ex>1?"s":""} · ${e.sets} série${e.sets>1?"s":""} · environ ${e.min} min</div>
+      ${nSt?`<div class="td-stake">${arrow}<span><b>${nSt} level up${nSt>1?"s":""}</b> en jeu</span></div>`:""}
+      <button class="td-cta" data-act="start" data-id="${next.id}">${done?"Commencer quand même":"Commencer"}</button></div>`}
+  const bets=sk.length?`<div class="eyebrow sec" data-in>En jeu${done?" à la prochaine séance":" aujourd'hui"}</div>
+    <div class="card td-list" data-in>${sk.map(x=>`<div class="td-bet${x.ready?" is-ready":""}"><span class="td-n">${esc(x.name)}</span>
+      <span class="td-g"><span class="td-seg"><i class="on"></i><i${x.ready?' class="on"':""}></i></span><span class="td-tag">${x.ready?"Level up prêt":"1 sur 2"}</span></span>
+      <span class="td-s">${x.txt}</span></div>`).join("")}</div>`:"";
+  const days=weekDays(next,nSt),ti=days.findIndex(d=>d.today),sel=ui.day!=null&&days[ui.day]?ui.day:Math.max(0,ti),N=S.routines.length,nW=days.reduce((a,d)=>a+d.n,0),held=weeksHeld();
+  const check='<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.5 5 9l4.5-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const week=`<div class="eyebrow sec" data-in>Cette semaine</div>
+    <div class="card td-week" data-in><div class="td-days"><span class="td-pill" style="transform:translateX(${sel*100}%)"></span>
+      ${days.map((d,i)=>`<button class="td-day ${d.st}" data-act="td-day" data-i="${i}" aria-pressed="${i===sel}" aria-label="${esc(d.t)}">${d.l}<span class="td-dot">${d.st==="is-done"?check:""}</span></button>`).join("")}</div>
+      <div class="td-info" aria-live="polite"><div class="t">${esc(days[sel].t)}</div><div class="d">${esc(days[sel].sub)}</div></div></div>
+    <p class="foot" data-in>${nW} séance${nW>1?"s":""}${N?" sur "+N:""} cette semaine${held?` · ${held} semaine${held>1?"s":""} tenue${held>1?"s":""} d'affilée`:""}</p>`;
+  const others=S.routines.filter(r=>r!==next).map(card).join("");
+  const dt=new Date(),date=DAYS[dt.getDay()]+" "+dt.getDate()+(dt.getDate()===1?"er":"")+" "+MONTHS[dt.getMonth()];
+  return `<div class="eyebrow">${date}</div><h1 style="margin-top:2px">Aujourd'hui</h1><div class="stack">${vBilan()}
+    ${hero||'<div class="card empty">Aucune routine. Crée-en une dans l\'onglet Routines.</div>'}${bets}${week}
+    ${others?`<div class="eyebrow sec">Autres routines</div>${others}`:""}
     <button class="btn block" data-act="start-free">+ Séance libre</button></div>`;
 }
 function pseudoItem(){return{id:null,sets:3,lo:null,hi:null,rest:90,kg:0,link:false,auto:false,note:"",ext:0}}
@@ -890,7 +1002,7 @@ function startSession(rid){
   draft={id:uid(),routine:r?r.name:"Séance libre",routineId:r?r.id:null,startedAt:Date.now(),exercises:its.map(i=>buildDraftEx(i,exById(i.ex))),timer:null,
     check:its.some(i=>{const e=exById(i.ex);return e.mode==="kick"||!!e.wrist})};
   if(draft.exercises[0])draft.exercises[0].link=false;
-  S.bilan=null;save();saveDraft();keepAwake(true);render();window.scrollTo(0,0);
+  ui.day=null;S.bilan=null;save();saveDraft();keepAwake(true);render();window.scrollTo(0,0);
 }
 function vWrist(){
   return `<div class="eyebrow">Avant de commencer</div><h1 style="margin:2px 0 14px">${esc(rName(draft.routine))}</h1>
@@ -1604,6 +1716,7 @@ document.addEventListener("click",async ev=>{
   if(a==="swipe-del"){const row=b.closest(".swipe");askDelete(row.dataset.kind,row.dataset.id);return}
   if(a==="start")startSession(b.dataset.id);
   else if(a==="start-free")startSession(null);
+  else if(a==="td-day")pickDay(+b.dataset.i);
   else if(a==="close-bilan"){S.bilan=null;save();render()}
   else if(a==="inc"||a==="dec"){const row=b.closest(".set");const ei=+row.dataset.ei,si=+row.dataset.si,f=b.dataset.f;const s=draft.exercises[ei].sets[si];
     const v=Math.max(0,r2((+s[f]||0)+(a==="inc"?1:-1)*STEP[f]));s[f]=v;saveDraft();const inp=document.getElementById(`in-${ei}-${si}-${f}`);if(inp)inp.value=dec(v)}
@@ -1726,9 +1839,10 @@ window.addEventListener("hashchange",()=>{const h=location.hash.slice(1);if(TABS
 document.addEventListener("touchstart",()=>{},{passive:true});
 
 /* ================= boot ================= */
-(function(){const h=location.hash.slice(1);if(TABS.some(t=>t[0]===h))ui.tab=h})();
+/* l'app s'ouvre sur Aujourd'hui, sauf lien direct vers un onglet (#progres…) */
+(function(){const h=location.hash.slice(1);ui.tab=TABS.some(t=>t[0]===h)?h:"enregistrer"})();
 if(draft){ui.tab="enregistrer";keepAwake(true)}
-render();showTimer();
+render();showTimer();tdEnter();
 })();
 </script>
 

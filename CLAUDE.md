@@ -32,7 +32,9 @@ Ne pas créer de PR sauf demande explicite.
 
 ## Onglets
 
-Enregistrer · Routines · Exercices · Progrès · Historique
+Aujourd'hui · Routines · Exercices · Progrès · Historique
+
+« Aujourd'hui » (clé interne `enregistrer`) est l'écran d'ouverture : séance du jour (routine qui suit la dernière faite), exercices à 1 séance du level up, semaine en 7 jours (objectif = nombre de routines), puis les autres routines et la séance libre. Tout y est calculé à l'affichage, rien n'est enregistré. Pendant une séance, l'onglet affiche la séance en cours.
 
 ## Modèle
 
