@@ -18,3 +18,4 @@
 - **2026-11-09** (PR #29) — Historique sorti de CLAUDE.md vers CHANGELOG.md (à lire sur demande) ; nouvelle règle : 2 lignes maximum par modification.
 - **2026-11-12** — Écran « Aujourd'hui » à la place de l'accueil d'Enregistrer (maquette A de `mockups/`) : carte de la séance du jour, level ups en jeu (règle des 2 séances), semaine en 7 jours et semaines tenues ; l'app s'ouvre dessus sauf lien direct (`#progres`…).
 - Calculé à l'affichage (`nextRoutine()`, `stakes()`, `weekDays()`, `weeksHeld()`), aucune donnée ajoutée ; noms de fichiers, `sw.js` et format `calitrack.v6` inchangés.
+- **2026-11-13** — Dossier `mockups/` retiré (maquettes de la direction visuelle, plus utilisées) ; elles restent dans l'historique git (commit 30af70f).
