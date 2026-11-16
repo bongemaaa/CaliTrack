@@ -12,7 +12,7 @@ Les noms doivent rester **exacts** sur GitHub (ils sont référencés par `sw.js
 | Fichier | Rôle |
 |---|---|
 | `index.html` | Toute l'app (HTML + CSS + JS dans un seul fichier) |
-| `sw.js` | Service worker : cache hors ligne, réseau d'abord pour la page |
+| `sw.js` | Service worker : cache hors ligne ; page affichée depuis le cache, mise à jour en arrière-plan |
 | `manifest.webmanifest` | Manifeste PWA |
 | `icon-180.png`, `icon-192.png`, `icon-512.png` | Icônes (180 = apple-touch-icon) |
 
@@ -20,7 +20,7 @@ Les noms doivent rester **exacts** sur GitHub (ils sont référencés par `sw.js
 
 1. Claude pousse une branche (jamais directement sur `main`).
 2. L'utilisateur crée la PR et la fusionne sur GitHub.
-3. Attendre 1–2 min (déploiement GitHub Pages), puis rouvrir l'app 2 fois sur l'iPhone.
+3. Attendre 1–2 min (déploiement GitHub Pages), puis rouvrir l'app 2 fois sur l'iPhone, en la fermant complètement entre les deux (balayer vers le haut dans le sélecteur d'apps).
 
 Ne pas créer de PR sauf demande explicite.
 
@@ -66,7 +66,7 @@ Avant une séance contenant des kick-ups ou un exercice marqué « Sollicite les
    - aucune ressource externe (CDN, police web, script distant) : tout reste inline dans `index.html` ;
    - ne pas retirer l'enregistrement du service worker (`navigator.serviceWorker.register("sw.js")`) ;
    - tout nouveau fichier statique doit être ajouté à la liste `FILES` de `sw.js`.
-2. `sw.js` sert la page en réseau d'abord (une nouvelle version de `index.html` apparaît sans toucher à `sw.js`), mais les autres fichiers en cache d'abord : si on modifie une icône, le manifeste ou la liste `FILES`, **incrémenter `CACHE`** dans `sw.js` (ex. `calitrack-v2` → `calitrack-v3`).
+2. `sw.js` affiche la page depuis le cache et la met à jour en arrière-plan (une nouvelle version de `index.html` apparaît à la 2ᵉ ouverture, sans toucher à `sw.js`) ; les autres fichiers sont aussi en cache d'abord : si on modifie une icône, le manifeste ou la liste `FILES`, **incrémenter `CACHE`** dans `sw.js` (ex. `calitrack-v2` → `calitrack-v3`).
 3. Préserver la compatibilité des données `calitrack.v6` (voir Données).
 4. Rester dans le style iOS natif décrit plus haut ; interface en français.
 5. Chaque modification ajoute 2 lignes maximum dans CHANGELOG.md.

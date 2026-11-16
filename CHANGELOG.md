@@ -21,3 +21,4 @@
 - **2026-11-13** — Dossier `mockups/` retiré (maquettes de la direction visuelle, plus utilisées) ; elles restent dans l'historique git (commit 30af70f).
 - **2026-11-16** — Données protégées : « Terminer » sauvegarde avant d'effacer le brouillon (échec = séance gardée ouverte) ; des données illisibles ne sont plus écrasées au démarrage (copie `calitrack.v6.corrupt`) ; retirer un exercice ou une série validés demande confirmation ; renommer un exercice ou une étape garde l'historique (plus de `_oldName`, réparé par `migrate()`).
 - Moteur : une séance incomplète (séries prévues non toutes validées) ne compte plus, bilan « Incomplète · non comptée » ; format `calitrack.v6` et `sw.js` inchangés.
+- **2026-11-16** — `sw.js` : la page s'affiche tout de suite depuis le cache (plus d'attente réseau de 2,5 s en salle) et se met à jour en arrière-plan ; une nouvelle version apparaît à la 2ᵉ ouverture. `CACHE` inchangé (`calitrack-v2`).
