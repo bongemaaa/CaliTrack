@@ -46,6 +46,7 @@ Aujourd'hui · Routines · Exercices · Progrès · Historique
 
 - **Level up** : haut de la fourchette atteint sur toutes les séries, 2 séances d'affilée.
 - **Régression** : moins de la moitié des séries atteint le bas de la fourchette, 2 fois de suite.
+- Une séance où toutes les séries prévues ne sont pas validées ne compte pas (ni level up, ni régression, ni recalage de charge).
 
 ## Design
 

@@ -19,3 +19,5 @@
 - **2026-11-12** — Écran « Aujourd'hui » à la place de l'accueil d'Enregistrer (maquette A de `mockups/`) : carte de la séance du jour, level ups en jeu (règle des 2 séances), semaine en 7 jours et semaines tenues ; l'app s'ouvre dessus sauf lien direct (`#progres`…).
 - Calculé à l'affichage (`nextRoutine()`, `stakes()`, `weekDays()`, `weeksHeld()`), aucune donnée ajoutée ; noms de fichiers, `sw.js` et format `calitrack.v6` inchangés.
 - **2026-11-13** — Dossier `mockups/` retiré (maquettes de la direction visuelle, plus utilisées) ; elles restent dans l'historique git (commit 30af70f).
+- **2026-11-16** — Données protégées : « Terminer » sauvegarde avant d'effacer le brouillon (échec = séance gardée ouverte) ; des données illisibles ne sont plus écrasées au démarrage (copie `calitrack.v6.corrupt`) ; retirer un exercice ou une série validés demande confirmation ; renommer un exercice ou une étape garde l'historique (plus de `_oldName`, réparé par `migrate()`).
+- Moteur : une séance incomplète (séries prévues non toutes validées) ne compte plus, bilan « Incomplète · non comptée » ; format `calitrack.v6` et `sw.js` inchangés.
