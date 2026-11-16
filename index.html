@@ -342,7 +342,7 @@ select.pick{width:100%;min-height:48px;border:0;border-radius:12px;background:va
 .bl-row .nm{font-weight:600;min-width:0;overflow-wrap:anywhere}
 .bl-row .why{grid-column:1/-1;color:var(--muted);font-size:calc(13px*var(--ts,1))}
 .verdict{font-weight:700;font-size:calc(13px*var(--ts,1));white-space:nowrap}
-.verdict.up{color:var(--accent-text)}.verdict.down{color:var(--bad)}.verdict.top{color:var(--good)}.verdict.fail{color:var(--bad)}.verdict.mid{color:var(--muted)}
+.verdict.up{color:var(--accent-text)}.verdict.down{color:var(--bad)}.verdict.top{color:var(--good)}.verdict.fail{color:var(--bad)}.verdict.mid,.verdict.skip{color:var(--muted)}
 
 /* Routines editor */
 .field{display:flex;flex-direction:column;gap:4px;min-width:0}
@@ -693,11 +693,19 @@ function defaultData(){
 
 /* ================= state ================= */
 const LS="calitrack.v6",DRAFT="calitrack.draft6",THEME="carnet.theme",UIK="calitrack.ui6";
-let S=null;try{S=JSON.parse(lsGet(LS)||"null")}catch(e){}
-if(!S||!Array.isArray(S.exercises)||!Array.isArray(S.routines)){S=Object.assign({v:6,sessions:[],bilan:null},defaultData())}
+const RAW=lsGet(LS);let S=null;try{S=JSON.parse(RAW||"null")}catch(e){}
+/* unreadable data is never overwritten: its raw text is copied to calitrack.v6.corrupt first; if even that copy fails,
+   nothing is written while the app is open (the original stays untouched) */
+let saveBlocked=false,bootWarn="";
+if(!S||!Array.isArray(S.exercises)||!Array.isArray(S.routines)){
+  if(RAW){if(lsSet(LS+".corrupt",RAW))bootWarn="Une copie de l'ancien contenu est conservée sur ce téléphone. L'app repart des routines par défaut.";
+    else{saveBlocked=true;bootWarn="L'ancien contenu reste intact sur ce téléphone, mais rien ne sera enregistré tant que l'app est ouverte."}}
+  S=Object.assign({v:6,sessions:[],bilan:null},defaultData())}
 /* additive migration, also run after an import: wrist flag (was guessed from the name), bounded prescriptions */
 function migrate(){
   if(!Array.isArray(S.sessions))S.sessions=[];
+  /* a rename interrupted in an older version left _oldName behind: its sessions follow the new name now */
+  S.exercises.forEach(e=>{if("_oldName" in e){const o=e._oldName;if(typeof o==="string"&&o&&o!==e.name)S.sessions.forEach(s=>(s.exercises||[]).forEach(x=>{if(x.name===o&&(x.ex===e.id||!x.ex))x.name=e.name}));delete e._oldName}});
   S.exercises.forEach(e=>{if(typeof e.wrist!=="boolean")e.wrist=e.mode!=="kick"&&/handstand/i.test(e.name||"");if(!Array.isArray(e.steps))e.steps=[]});
   S.routines.forEach(r=>{if(!Array.isArray(r.items))r.items=[];r.items.forEach(i=>{i.sets=clamp(Math.round(+i.sets||1),1,20);i.rest=clamp(Math.round(+i.rest||0),0,659)})});
 }
@@ -708,7 +716,7 @@ try{Object.assign(ui,JSON.parse(lsGet(UIK)||"{}"),{editRoutine:null,editEx:null}
 /* a failed write (quota, storage unavailable) must not go unnoticed: the data only lives on this phone */
 let saveFailed=false;
 function saveOk(ok){if(!ok&&!saveFailed)toast("Enregistrement impossible : exporte tes données (Historique).");saveFailed=!ok}
-function save(){saveOk(lsSet(LS,JSON.stringify(S)))}
+function save(){const ok=!saveBlocked&&lsSet(LS,JSON.stringify(S));saveOk(ok);return ok}
 function saveDraft(){if(draft)saveOk(lsSet(DRAFT,JSON.stringify(draft)));else lsDel(DRAFT)}
 function saveUI(){lsSet(UIK,JSON.stringify({tab:ui.tab,exo:ui.exo,period:ui.period,lastExport:ui.lastExport||0}))}
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist().catch(()=>{})}catch(e){}
@@ -768,7 +776,8 @@ function judge(e,item,ex,t){
   const nHi=vals.filter(v=>v>=t.hi).length,nLo=vals.filter(v=>v>=t.lo).length;
   if(atLoad&&nHi>=t.sets)return"top";if(nLo<Math.ceil(t.sets/2))return"fail";return"mid";
 }
-function history(item,ex){const nm=dispName(ex);return sortedSessions().filter(s=>(s.start||0)>(item.since||0)).map(s=>({s,e:s.exercises.find(x=>x.rx===item.id&&x.name===nm)})).filter(h=>h.e).reverse()}
+/* a session where not every planned set was validated does not count: it neither breaks nor advances the 2-session run */
+function history(item,ex){const nm=dispName(ex),need=tgtOf(item,ex).sets;return sortedSessions().filter(s=>(s.start||0)>(item.since||0)).map(s=>({s,e:s.exercises.find(x=>x.rx===item.id&&x.name===nm)})).filter(h=>h.e&&h.e.sets.length>=need).reverse()}
 function streakOf(item,ex){const t=engineT(item,ex);if(!t)return null;const h=history(item,ex);if(!h.length)return null;const j=judge(h[0].e,item,ex,t);return j==="mid"?null:j}
 /* ================= Aujourd'hui : tout est calculé à l'affichage, rien n'est enregistré ================= */
 /* routine du jour = celle qui suit, dans l'ordre des routines, celle de la dernière séance */
@@ -845,6 +854,7 @@ function runEngine(s,dexs){
     const f=findItem(de.item);if(!f)return;const item=f.i;const ex=exById(item.ex);if(!ex)return;
     if(item.pending){item.pending=null;touched=true}
     const nm=dispName(ex);const le=s.exercises.find(x=>x.rx===item.id&&x.name===nm);if(!le)return;
+    if(le.sets.length<tgtOf(item,ex).sets){if(engineT(item,ex))items.push({name:nm,j:"skip"});return}   /* incomplete: no load change, no verdict */
     if(ex.prog==="charge"){const ks=[...new Set(le.sets.map(x=>+x.kg||0))];if(ks.length===1&&ks[0]!==(item.kg||0)){item.kg=ks[0];item.since=s.start-1;touched=true}}
     const t=engineT(item,ex);if(!t)return;const h=history(item,ex);if(!h.length)return;
     const j=judge(h[0].e,item,ex,t),j2=h.length>=2?judge(h[1].e,item,ex,t):null;
@@ -853,7 +863,7 @@ function runEngine(s,dexs){
     if(dir){Object.assign(it,{verdict:dir},applyVerdict(item,ex,dir,s.end));touched=true}
     items.push(it);
   });
-  const order={up:0,down:1,top:2,fail:3,mid:4};
+  const order={up:0,down:1,top:2,fail:3,mid:4,skip:5};
   items.sort((a,b)=>order[a.verdict||a.j]-order[b.verdict||b.j]);
   return{items,touched};
 }
@@ -901,7 +911,12 @@ function updNav(){
 let navRaf=0;["scroll","resize"].forEach(t=>window.addEventListener(t,()=>{if(!navRaf)navRaf=requestAnimationFrame(()=>{navRaf=0;updNav()})},{passive:true}));
 /* tab change: a short fade of the new content only (iOS switches tabs without a transition; no slide, nothing to wait for).
    Tapping quickly fades from the current opacity, so it never blinks. Same tab with nothing to close: back to the top. */
+/* a field still focused is committed (blur fires its change event) before the screen changes: an edge swipe or a tab
+   tap does not take the focus away on iOS, and a rename must reach the history */
+function commitField(){const a=document.activeElement;if(a&&a!==document.body&&a.blur)a.blur()}
+document.addEventListener("visibilitychange",()=>{if(document.hidden)commitField()});
 function go(tab){
+  commitField();
   if(tab===ui.tab&&!ui.editRoutine&&!ui.editEx){window.scrollTo({top:0,behavior:RM.matches?"auto":"smooth"});return}
   const changed=tab!==ui.tab;ui.tab=tab;ui.day=null;ui.editRoutine=null;ui.editEx=null;saveUI();try{if(location.hash!=="#"+tab)window.history.replaceState(null,"","#"+tab)}catch(e){}
   const from=+getComputedStyle(main).opacity;render();window.scrollTo(0,0);updNav();
@@ -935,7 +950,7 @@ function swipeRow(kind,id,inner,extraClass){return `<div class="swipe" data-kind
 function vBilan(){
   const b=S.bilan;if(!b||!b.items||!b.items.length)return"";
   const rows=b.items.map(it=>{
-    const cls=it.verdict||it.j;const lab=it.verdict==="up"?"Level up":it.verdict==="down"?"Régression":it.j==="top"?"Haut atteint · 1/2":it.j==="fail"?"Bas manqué · 1/2":"Dans la fourchette";
+    const cls=it.verdict||it.j;const lab=it.verdict==="up"?"Level up":it.verdict==="down"?"Régression":it.j==="top"?"Haut atteint · 1/2":it.j==="fail"?"Bas manqué · 1/2":it.j==="skip"?"Incomplète · non comptée":"Dans la fourchette";
     const why=it.verdict?(it.auto?`${esc(it.from)} → <b>${esc(it.to)}</b> à la prochaine séance`:esc(it.msg)):"";
     return `<div class="bl-row"><span class="nm">${esc(it.name)}</span><span class="verdict ${cls}">${lab}</span>${why?`<span class="why">${why}</span>`:""}</div>`}).join("");
   return `<div class="card bilan"><div class="card-head"><h3>Bilan de la séance</h3><button class="link" data-act="close-bilan">Fermer</button></div>
@@ -1083,10 +1098,13 @@ function finishSession(){
   const st=new Date(draft.startedAt);
   const s={id:draft.id,date:iso(st),start:draft.startedAt,end:Date.now(),routine:draft.routine,routineId:draft.routineId,exercises:exs,updatedAt:Date.now()};
   if(draft.wrist!=null)s.wrist=draft.wrist;
+  /* saved before the draft is dropped: if the write fails, everything goes back as it was and the session stays open */
+  const snap=JSON.stringify(S);
   S.sessions.push(s);
   const res=runEngine(s,draft.exercises);S.bilan={routine:s.routine,items:res.items};
+  if(!save()){S=JSON.parse(snap);alertBox("Séance non enregistrée","La mémoire de l'app est pleine ou indisponible. Ta séance reste ouverte : exporte tes données (Historique), puis touche à nouveau « Terminer ».");return}
   const n=exs.reduce((a,e)=>a+e.sets.length,0);
-  draft=null;saveDraft();stopTimer();keepAwake(false);save();
+  draft=null;saveDraft();stopTimer();keepAwake(false);
   const ups=res.items.filter(i=>i.verdict==="up").length;
   toast(ups?`Séance enregistrée · ${ups} level up !`:`Séance enregistrée : ${n} série${n>1?"s":""}.`);
   render();window.scrollTo(0,0);
@@ -1447,6 +1465,7 @@ function blockBehind(ev){const sc=ev.target.closest&&ev.target.closest(".pcol,.s
 function closeSheet(){hideEl($("#sheet"),260);pickCb=null}
 /* leave a routine / exercise detail for its list (back link, nav bar, edge swipe) */
 function backFrom(){
+  commitField();
   if(ui.editRoutine){const r=S.routines.find(x=>x.id===ui.editRoutine);if(r&&r.items[0])r.items[0].link=false;ui.editRoutine=null}
   else ui.editEx=null;
   save();render();window.scrollTo(0,0);updNav();
@@ -1702,6 +1721,12 @@ function assignEx(kind,itemId,exId){
   const r=S.routines.find(x=>x.id===ui.editRoutine);const it=r&&r.items.find(x=>x.id===itemId);if(!it)return;
   it.ex=exId;it.auto=ex.prog!=="aucun"&&ex.mode!=="kick";it.since=Date.now();it.pending=null;if(ex.mode==="kick"){it.sets=1;if(it.lo==null){it.lo=20;it.hi=20}}save();render();
 }
+/* rename: past sessions, the session in progress and the Progrès choice follow, so the history stays attached.
+   Matched by exercise id; legacy sessions without an id (old imports) by name only for an exercise rename */
+function renameLogged(exId,from,to,legacy){if(!from||from===to)return;
+  S.sessions.forEach(s=>s.exercises.forEach(e=>{if(e.name===from&&(e.ex===exId||(legacy&&!e.ex)))e.name=to}));
+  if(draft){draft.exercises.forEach(e=>{if(e.ex===exId&&e.name===from)e.name=to});saveDraft()}
+  if(ui.exo===from){ui.exo=to;saveUI()}}
 /* exercise changed in the library: prescriptions restart their 2-session count */
 function exChanged(ex,resetCount){if(resetCount)S.routines.forEach(r=>r.items.forEach(i=>{if(i.ex===ex.id){i.since=Date.now();i.pending=null}}));save()}
 
@@ -1747,10 +1772,13 @@ document.addEventListener("click",async ev=>{
     enter(main.querySelector(`.set[data-ei="${ei}"][data-si="${e.sets.length-1}"]`),-6)}
   /* a removed set or exercise fades, then what is below closes up (same as a swipe deletion); the exercise is found again
      by reference when the fade ends, so two quick taps can never remove the wrong one */
-  else if(a==="rm-set"){const ei=+b.dataset.ei;const e=draft.exercises[ei];if(e.sets.length<2)return;
-    removeRow(main.querySelector(`.set[data-ei="${ei}"][data-si="${e.sets.length-1}"]`),()=>{if(!draft||e.sets.length<2)return;e.sets.pop();saveDraft();render()})}
-  else if(a==="rm-ex"){const tgt=draft.exercises[+b.dataset.ei];if(!tgt)return;
-    removeRow(b.closest(".member")||b.closest(".card"),()=>{if(!draft)return;const ex=draft.exercises;const i=ex.indexOf(tgt);if(i<0)return;const nx=ex[i+1];if(nx&&nx.link&&!ex[i].link)nx.link=false;ex.splice(i,1);if(ex[0])ex[0].link=false;saveDraft();render()})}
+  /* a validated set is never lost without a confirmation */
+  else if(a==="rm-set"){const ei=+b.dataset.ei;const e=draft.exercises[ei];if(e.sets.length<2)return;const k=e.sets.length;
+    const rm=()=>removeRow(main.querySelector(`.set[data-ei="${ei}"][data-si="${k-1}"]`),()=>{if(!draft||e.sets.length<2)return;e.sets.pop();saveDraft();render()});
+    if(e.sets[k-1].done)confirmBox(`Retirer la série ${k} ?`,"Elle est validée : elle ne sera pas enregistrée.","Retirer",rm);else rm()}
+  else if(a==="rm-ex"){const tgt=draft.exercises[+b.dataset.ei];if(!tgt)return;const el=b.closest(".member")||b.closest(".card");const nd=tgt.sets.filter(x=>x.done).length;
+    const rm=()=>removeRow(el,()=>{if(!draft)return;const ex=draft.exercises;const i=ex.indexOf(tgt);if(i<0)return;const nx=ex[i+1];if(nx&&nx.link&&!ex[i].link)nx.link=false;ex.splice(i,1);if(ex[0])ex[0].link=false;saveDraft();render()});
+    if(nd)confirmBox(`Retirer « ${tgt.name} » ?`,`${pl(nd,"série validée","séries validées")} ne ${nd>1?"seront":"sera"} pas enregistrée${nd>1?"s":""}.`,"Retirer",rm);else rm()}
   else if(a==="finish")finishSession();
   else if(a==="cancel")confirmBox("Abandonner la séance ?","Rien ne sera enregistré. Cette action est irréversible.","Abandonner",()=>{draft=null;saveDraft();stopTimer();keepAwake(false);render();window.scrollTo(0,0)});
   /* routines */
@@ -1793,9 +1821,9 @@ document.addEventListener("input",ev=>{
   if(t.dataset&&t.dataset.sugg){suggest(t);return}
   if(t.id==="exQ"){ui.exQuery=t.value;swOpen=null;const l=$("#exList");if(l)l.innerHTML=exListHTML();return}
   if(t.id==="rname"){const r=S.routines.find(x=>x.id===ui.editRoutine);if(r){r.name=t.value;save()}return}
-  if(t.dataset&&t.dataset.xf&&["name","how","link"].includes(t.dataset.xf)){const ex=exById(ui.editEx);if(!ex)return;
-    if(t.dataset.xf==="name"){ex._oldName=ex._oldName??ex.name;ex.name=t.value}else ex[t.dataset.xf]=t.value;if(t.dataset.xf==="how"&&t.value.trim())ex.todo=false;save();return}
-  if(t.dataset&&t.dataset.sf==="n"){const ex=exById(ui.editEx);if(!ex)return;ex.steps[+t.dataset.step].n=t.value;save();return}
+  /* exercise and step names are written on change (see renameLogged): never half-renamed */
+  if(t.dataset&&t.dataset.xf&&["how","link"].includes(t.dataset.xf)){const ex=exById(ui.editEx);if(!ex)return;
+    ex[t.dataset.xf]=t.value;if(t.dataset.xf==="how"&&t.value.trim())ex.todo=false;save();return}
   if(t.dataset&&t.dataset.item&&t.dataset.f==="note"){const f=findItem(t.dataset.item);if(f){f.i.note=t.value;save()}}
 });
 document.addEventListener("change",ev=>{
@@ -1815,15 +1843,18 @@ document.addEventListener("change",ev=>{
       it.since=Date.now();it.pending=null;it.ext=0;save();return}
   }
   if(t.dataset.xf){const ex=exById(ui.editEx);if(!ex)return;const k=t.dataset.xf;
-    if(k==="name"){const old=ex._oldName;delete ex._oldName;ex.name=t.value.trim()||old||"Sans nom";
-      /* keep the history continuous: past sessions logged under the old name follow the rename */
-      if(old&&old!==ex.name&&ex.prog!=="etapes")S.sessions.forEach(s=>s.exercises.forEach(e=>{if(e.name===old&&(e.ex===ex.id||!e.ex))e.name=ex.name}));save();render();return}
+    if(k==="name"){const old=ex.name;ex.name=t.value.trim()||old||"Sans nom";renameLogged(ex.id,old,ex.name,true);save();render();return}
     if(t.type==="checkbox"){ex[k]=t.checked;if(k==="load"&&!t.checked){ex.lest=false;ex.halt=false;if(ex.prog==="charge")ex.prog="signal"}exChanged(ex,k==="load"||k==="uni");render();return}
     if(k==="prog"){ex.prog=t.value;if(ex.prog==="etapes"&&!ex.steps.length)ex.steps=[{n:ex.name,lo:null,hi:null}];
       S.routines.forEach(r=>r.items.forEach(i=>{if(i.ex===ex.id)i.auto=ex.prog!=="aucun"&&ex.mode!=="kick"}));exChanged(ex,true);render();return}
     if(k==="incr"){ex.incr=Math.max(.25,numOrNull(t.value)||2.5);save();return}
     if(k==="lvl"){ex.lvl=+t.value;exChanged(ex,true);render();return}
   }
+  /* step name: sessions are logged under the step's name (the exercise's name when empty). Steps sharing a name share one
+     history, which is then left where it is rather than moved to one of them */
+  if(t.dataset.sf==="n"){const ex=exById(ui.editEx);if(!ex)return;const i=+t.dataset.step,st=ex.steps[i];if(!st)return;
+    const disp=o=>o.n||ex.name;const from=disp(st);st.n=t.value.trim();
+    if(!ex.steps.some((o,j)=>j!==i&&disp(o)===from))renameLogged(ex.id,from,disp(st),false);save();return}
   if(t.dataset.sf==="lo"||t.dataset.sf==="hi"){const ex=exById(ui.editEx);if(!ex)return;const s=ex.steps[+t.dataset.step];const v=numOrNull(t.value);s[t.dataset.sf]=v==null?null:Math.max(0,Math.round(v));
     if(s.lo==null)s.hi=null;else if(s.hi==null||s.hi<s.lo)s.hi=s.lo;exChanged(ex,true);return}
 });
@@ -1843,6 +1874,7 @@ document.addEventListener("touchstart",()=>{},{passive:true});
 (function(){const h=location.hash.slice(1);ui.tab=TABS.some(t=>t[0]===h)?h:"enregistrer"})();
 if(draft){ui.tab="enregistrer";keepAwake(true)}
 render();showTimer();tdEnter();
+if(bootWarn)alertBox("Données illisibles",bootWarn);
 })();
 </script>
 
