@@ -58,7 +58,7 @@ Aujourd'hui · Routines · Exercices · Progrès · Historique
 
 ## Garde-fou poignets
 
-Avant une séance contenant des kick-ups ou un exercice marqué « Sollicite les poignets » (champ `wrist`, coché d'office quand le nom contient « handstand », y compris par migration des anciennes données), l'app demande l'état des poignets. Si la gêne est > 3/10, les kick-ups sont retirés de la séance.
+Avant une séance contenant des kick-ups ou un exercice marqué « Sollicite les poignets » (champ `wrist`, coché d'office quand le nom contient « handstand », y compris par migration des anciennes données), l'app demande l'état des poignets. La question vient aussi si un tel exercice est ajouté en cours de séance (séance libre comprise). Si la gêne est > 3/10, les kick-ups sont retirés de la séance et ne peuvent plus y être ajoutés.
 
 ## Règles pour toute modification
 

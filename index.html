@@ -708,6 +708,18 @@ function migrate(){
   S.exercises.forEach(e=>{if("_oldName" in e){const o=e._oldName;if(typeof o==="string"&&o&&o!==e.name)S.sessions.forEach(s=>(s.exercises||[]).forEach(x=>{if(x.name===o&&(x.ex===e.id||!x.ex))x.name=e.name}));delete e._oldName}});
   S.exercises.forEach(e=>{if(typeof e.wrist!=="boolean")e.wrist=e.mode!=="kick"&&/handstand/i.test(e.name||"");if(!Array.isArray(e.steps))e.steps=[]});
   S.routines.forEach(r=>{if(!Array.isArray(r.items))r.items=[];r.items.forEach(i=>{i.sets=clamp(Math.round(+i.sets||1),1,20);i.rest=clamp(Math.round(+i.rest||0),0,659)})});
+  /* types normalised (boot and every import): a damaged or hand-edited file cannot break a view or end up in the HTML.
+     Valid data is left as it is */
+  const numN=v=>{if(v==null||v==="")return null;const n=+v;return Number.isFinite(n)?n:null},num0=v=>numN(v)??0,isObj=x=>!!x&&typeof x==="object";
+  S.sessions=S.sessions.filter(x=>isObj(x)&&typeof x.date==="string");
+  S.sessions.forEach(x=>{x.exercises=Array.isArray(x.exercises)?x.exercises.filter(isObj):[];
+    x.exercises.forEach(e=>{e.name=String(e.name??"");if(!["reps","sec","kick"].includes(e.mode))e.mode="reps";e.sets=Array.isArray(e.sets)?e.sets.filter(isObj):[]});
+    if(x.wrist!=null){const w=numN(x.wrist);if(w==null)delete x.wrist;else x.wrist=w}});
+  S.exercises.forEach(e=>{e.name=String(e.name??"");if(!["reps","sec","kick"].includes(e.mode))e.mode="reps";
+    if(!["aucun","signal","charge","duree","etapes"].includes(e.prog))e.prog="aucun";const inc=numN(e.incr);e.incr=inc>0?inc:2.5;e.lvl=Math.max(0,Math.round(num0(e.lvl)));
+    e.steps=e.steps.filter(isObj);e.steps.forEach(x=>{x.n=String(x.n??"");x.lo=numN(x.lo);x.hi=numN(x.hi)})});
+  S.routines.forEach(r=>r.items.forEach(i=>{i.lo=numN(i.lo);i.hi=numN(i.hi);i.kg=num0(i.kg);i.ext=num0(i.ext);i.since=num0(i.since);
+    if(i.pending!=null&&!(isObj(i.pending)&&(i.pending.dir==="up"||i.pending.dir==="down")))i.pending=null}));
 }
 migrate();
 let draft=null;try{draft=JSON.parse(lsGet(DRAFT)||"null")}catch(e){}
@@ -845,7 +857,7 @@ function applyVerdict(item,ex,dir,at){
   const p={dir,auto,from,to,msg,before,alt,at,exId:ex.id};
   item.since=at;item.pending=p;
   /* a step change applies to the exercise everywhere: the other routines show it too */
-  if(shared)S.routines.forEach(r=>r.items.forEach(o=>{if(o!==item&&o.ex===ex.id){o.since=at;o.pending=JSON.parse(JSON.stringify(p))}}));
+  if(shared)S.routines.forEach(r=>r.items.forEach(o=>{if(o!==item&&o.ex===ex.id){o.since=at;o.pending=Object.assign(JSON.parse(JSON.stringify(p)),{before:{kg:o.kg,lo:o.lo,hi:o.hi,ext:o.ext||0,lvl:before.lvl}})}}));
   return p;
 }
 function runEngine(s,dexs){
@@ -897,9 +909,17 @@ const main=$("#main");
 function renderTabs(){$("#tabs").innerHTML=TABS.map(([k,l,ic])=>`<button class="tab" data-tab="${k}" ${ui.tab===k?'aria-current="page"':""}><span class="ico">${ic}</span>${l}</button>`).join("")}
 function render(){
   swOpen=null;renderTabs();
-  const v={enregistrer:vRecord,routines:vRoutines,exercices:vExercises,progres:vProgress,historique:vHistory}[ui.tab]||vRecord;
-  const segX=segPositions();
-  main.innerHTML=v();paintThemeBtn();bindChart();paintSegs(segX);revealLvl();updNav();
+  try{
+    const v={enregistrer:vRecord,routines:vRoutines,exercices:vExercises,progres:vProgress,historique:vHistory}[ui.tab]||vRecord;
+    const segX=segPositions();
+    main.innerHTML=v();paintThemeBtn();bindChart();paintSegs(segX);revealLvl();updNav();
+  }catch(err){try{console.error(err)}catch(e){}
+    /* a view that throws: the tabs stay usable, the data can still be saved, a broken session can be dropped */
+    main.innerHTML=`<h1>Affichage impossible</h1><div class="stack"><div class="card stack">
+      <p style="margin:0">Une donnée inattendue empêche d'afficher cet écran. Rien n'a été modifié : sauvegarde tes données, puis essaie un autre onglet.</p>
+      <button class="btn block" data-act="export">Sauvegarder dans un fichier</button><div id="dumpBox" hidden></div>
+      ${draft?'<button class="btn quiet block" data-act="cancel">Abandonner la séance en cours</button>':""}
+      <p class="muted" style="margin:0;font-size:calc(12px*var(--ts,1))">Détail : ${esc(err&&err.message||err)}</p></div></div>`}
 }
 /* compact nav bar: on once the bottom of the large title passes under it; back button only on a detail screen */
 const navbar=$("#navbar"),navTitle=$("#navTitle"),navClock=$("#navClock");
@@ -990,7 +1010,9 @@ function vRecord(){
     <p class="foot" data-in>${nW} séance${nW>1?"s":""}${N?" sur "+N:""} cette semaine${held?` · ${held} semaine${held>1?"s":""} tenue${held>1?"s":""} d'affilée`:""}</p>`;
   const others=S.routines.filter(r=>r!==next).map(card).join("");
   const dt=new Date(),date=DAYS[dt.getDay()]+" "+dt.getDate()+(dt.getDate()===1?"er":"")+" "+MONTHS[dt.getMonth()];
-  return `<div class="eyebrow">${date}</div><h1 style="margin-top:2px">Aujourd'hui</h1><div class="stack">${vBilan()}
+  const backup=backupDue()?`<div class="banner">${ui.lastExport?`Dernière sauvegarde le ${fmtDateShort(iso(new Date(ui.lastExport)))}.`:"Aucune sauvegarde pour l'instant."} Tes séances n'existent que sur ce téléphone.
+    <button class="btn small block" data-act="export" style="margin-top:10px">Sauvegarder dans un fichier</button><div id="dumpBox" hidden></div></div>`:"";
+  return `<div class="eyebrow">${date}</div><h1 style="margin-top:2px">Aujourd'hui</h1><div class="stack">${vBilan()}${backup}
     ${hero||'<div class="card empty">Aucune routine. Crée-en une dans l\'onglet Routines.</div>'}${bets}${week}
     ${others?`<div class="eyebrow sec">Autres routines</div>${others}`:""}
     <button class="btn block" data-act="start-free">+ Séance libre</button></div>`;
@@ -1372,7 +1394,7 @@ function bindChart(){
 function vHistory(){
   const t=today();const wk=mondayOf(t).getTime();const mStart=new Date(t.getFullYear(),t.getMonth(),1).getTime();const tsOf=s=>parseISO(s.date).getTime();
   const week=S.sessions.filter(s=>tsOf(s)>=wk).length,month=S.sessions.filter(s=>tsOf(s)>=mStart).length;
-  const weeks=new Set(S.sessions.map(s=>mondayOf(parseISO(s.date)).getTime()));let cur=wk;if(!weeks.has(cur))cur-=7*DAY;let streak=0;
+  const weeks=new Set(S.sessions.map(s=>mondayOf(parseISO(s.date)).getTime()));let cur=wk;if(!weeks.has(cur)){const d=new Date(cur);d.setDate(d.getDate()-7);cur=d.getTime()}let streak=0;
   while(weeks.has(cur)){streak++;const d=new Date(cur);d.setDate(d.getDate()-7);cur=d.getTime()}
   if(!ui.calMonth)ui.calMonth=iso(new Date(t.getFullYear(),t.getMonth(),1));
   const m0=parseISO(ui.calMonth);const y=m0.getFullYear(),mo=m0.getMonth();
@@ -1385,7 +1407,7 @@ function vHistory(){
   if(ui.calDay&&byDay[ui.calDay]){const d=parseISO(ui.calDay);
     detail=`<h2 id="dayTitle" style="text-transform:capitalize">${DAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]}</h2>`+byDay[ui.calDay].map(s=>{const vol=sessionVolume(s);const dur=s.end&&s.start?Math.round((s.end-s.start)/60000):null;
       return swipeRow("session",s.id,`<div style="padding:14px 16px"><div class="card-head"><h3>${esc(rName(s.routine))}</h3></div>
-       <div class="muted" style="font-size:calc(13px*var(--ts,1));margin:2px 0 8px">${dur?dur+" min · ":""}${pl(s.exercises.length,"exercice","exercices")} · ${pl(vol.n,"série","séries")} · ${nf2.format(vol.v/1000)} t${s.wrist!=null?" · poignets "+s.wrist+"/10":""}</div>
+       <div class="muted" style="font-size:calc(13px*var(--ts,1));margin:2px 0 8px">${dur?dur+" min · ":""}${pl(s.exercises.length,"exercice","exercices")} · ${pl(vol.n,"série","séries")} · ${nf2.format(vol.v/1000)} t${s.wrist!=null?" · poignets "+esc(s.wrist)+"/10":""}</div>
        <div class="sesex">${s.exercises.map((e,k)=>swipeRow("sesex",s.id+"|"+k,`<div class="detail-ex"><b>${esc(e.name)}${e.tempo?` <span class="muted" style="font-weight:500">· ${esc(e.tempo)}</span>`:""}</b><span class="muted">${e.sets.length} série${e.sets.length>1?"s":""}</span><span class="sets-txt">${esc(setsTxt(e))}</span></div>`)).join("")}</div></div>`)}).join("")
       +`<p class="foot">Glisse une séance (par son titre) ou un exercice vers la gauche pour le supprimer.</p>`;
   }
@@ -1414,7 +1436,7 @@ function csvData(){
 }
 /* backup reminder: sessions logged since the last JSON export, and that export is over 14 days old (or never done) */
 function backupDue(){if(!S.sessions.length)return false;const last=ui.lastExport||0;if(Date.now()-last<14*DAY)return false;const d=last?iso(new Date(last)):"";return S.sessions.some(s=>s.date>=d)}
-function markExported(kind){if(kind!=="json")return;ui.lastExport=Date.now();saveUI();if(ui.tab==="historique")render()}
+function markExported(kind){if(kind!=="json")return;ui.lastExport=Date.now();saveUI();if(ui.tab==="historique"||ui.tab==="enregistrer"&&!draft)render()}
 async function doExport(kind){
   let data,name;
   if(kind==="csv"){const c=csvData();if(!c.rows){toast("Aucune séance à exporter.");return}data=c.csv;name="calitrack-"+iso(today())+".csv"}else{data=exportData();name="calitrack-"+iso(today())+".json"}
@@ -1440,7 +1462,7 @@ function handleImport(text){
     if(Array.isArray(v.exercises)&&!v.exercises.every(e=>e&&okId(e.id)&&typeof e.name==="string"))throw new Error();
     if(Array.isArray(v.routines)&&!v.routines.every(r=>r&&okId(r.id)&&Array.isArray(r.items)&&r.items.every(i=>i&&okId(i.id)&&(i.ex==null||okId(i.ex)))))throw new Error();
     importPayload=v;const full=Array.isArray(v.exercises)&&Array.isArray(v.routines);
-    box.innerHTML=`<div class="banner">Fichier lu : <b>${v.sessions.length} séance${v.sessions.length>1?"s":""}</b>${full?`, ${pl(v.exercises.length,"exercice","exercices")}, ${pl(v.routines.length,"routine","routines")}. Il remplacera toutes les données actuelles.`:". Ancienne version : seules les séances seront importées, tes routines et exercices restent."}</div>
+    box.innerHTML=`<div class="banner">Fichier lu : <b>${v.sessions.length} séance${v.sessions.length>1?"s":""}</b>${full?`, ${pl(v.exercises.length,"exercice","exercices")}, ${pl(v.routines.length,"routine","routines")}. Il remplacera toutes les données actuelles : sauvegarde-les d'abord si tu veux pouvoir revenir en arrière.`:". Ancienne version : seules les séances seront importées, tes routines et exercices restent."}</div>
      <div class="row" style="margin-top:8px"><button class="btn primary small" data-act="import-ok" style="flex:1">Importer</button><button class="btn small" data-act="import-no">Annuler</button></div>`;
   }catch(e){importPayload=null;box.innerHTML=`<div class="banner">Ce fichier n'est pas une sauvegarde CaliTrack. Choisis le fichier .json créé par « Sauvegarder dans un fichier ».</div>`}
 }
@@ -1717,7 +1739,13 @@ function suggest(input){
 }
 function assignEx(kind,itemId,exId){
   const ex=exById(exId);if(!ex)return;
-  if(kind==="live"&&draft){const link=$("#liveLink")&&$("#liveLink").checked;const nd=buildDraftEx(pseudoItem(),ex);nd.link=!!link&&draft.exercises.length>0;draft.exercises.push(nd);saveDraft();render();return}
+  if(kind==="live"&&draft){
+    /* the wrist guard holds for the whole session: kick-ups stay out once removed, and a wrist exercise added before
+       the question was asked brings the question up now */
+    if(ex.mode==="kick"&&draft.guard){toast(`Kick-ups retirés aujourd'hui : poignets à ${draft.wrist}/10.`);return}
+    const link=$("#liveLink")&&$("#liveLink").checked;const nd=buildDraftEx(pseudoItem(),ex);nd.link=!!link&&draft.exercises.length>0;draft.exercises.push(nd);
+    if((ex.mode==="kick"||ex.wrist)&&draft.wrist==null){draft.check=true;saveDraft();render();window.scrollTo(0,0);return}
+    saveDraft();render();return}
   const r=S.routines.find(x=>x.id===ui.editRoutine);const it=r&&r.items.find(x=>x.id===itemId);if(!it)return;
   it.ex=exId;it.auto=ex.prog!=="aucun"&&ex.mode!=="kick";it.since=Date.now();it.pending=null;if(ex.mode==="kick"){it.sets=1;if(it.lo==null){it.lo=20;it.hi=20}}save();render();
 }
@@ -1744,7 +1772,8 @@ document.addEventListener("click",async ev=>{
   else if(a==="td-day")pickDay(+b.dataset.i);
   else if(a==="close-bilan"){S.bilan=null;save();render()}
   else if(a==="inc"||a==="dec"){const row=b.closest(".set");const ei=+row.dataset.ei,si=+row.dataset.si,f=b.dataset.f;const s=draft.exercises[ei].sets[si];
-    const v=Math.max(0,r2((+s[f]||0)+(a==="inc"?1:-1)*STEP[f]));s[f]=v;saveDraft();const inp=document.getElementById(`in-${ei}-${si}-${f}`);if(inp)inp.value=dec(v)}
+    const xk=f==="kg"?exById(draft.exercises[ei].ex):null,stp=xk&&+xk.incr>0?+xk.incr:STEP[f];
+    const v=Math.max(0,r2((+s[f]||0)+(a==="inc"?1:-1)*stp));s[f]=v;saveDraft();const inp=document.getElementById(`in-${ei}-${si}-${f}`);if(inp)inp.value=dec(v)}
   else if(a==="done"){const row=b.closest(".set");const ei=+row.dataset.ei,si=+row.dataset.si;const s=draft.exercises[ei].sets[si];
     s.done=!s.done;saveDraft();row.classList.toggle("ok",s.done);b.setAttribute("aria-pressed",s.done);
     b.classList.remove("pop");if(s.done){void b.offsetWidth;b.classList.add("pop")}lastNextKey="";if(s.done)onSetDone(ei,si);
@@ -1810,7 +1839,8 @@ document.addEventListener("click",async ev=>{
   else if(a==="import-no"){importPayload=null;$("#importBox").hidden=true}
   else if(a==="import-ok"&&importPayload){const v=importPayload;importPayload=null;
     const full=Array.isArray(v.exercises)&&Array.isArray(v.routines);
-    if(full){S.exercises=v.exercises;S.routines=v.routines;S.sessions=v.sessions;migrate()}else{const ids=new Set(S.sessions.map(s=>s.id));v.sessions.forEach(s=>{if(!ids.has(s.id))S.sessions.push(s)})}
+    if(full){S.exercises=v.exercises;S.routines=v.routines;S.sessions=v.sessions}else{const ids=new Set(S.sessions.map(s=>s.id));v.sessions.forEach(s=>{if(!ids.has(s.id))S.sessions.push(s)})}
+    migrate();
     S.bilan=null;save();render();toast(`${v.sessions.length} séance${v.sessions.length>1?"s":""} importée${v.sessions.length>1?"s":""}.`)}
   else if(a==="wipe")confirmBox("Tout effacer ?","Toutes les séances seront supprimées. Tes routines et exercices restent. Cette action est irréversible.","Tout effacer",()=>{S.sessions=[];S.bilan=null;ui.calDay=null;S.routines.forEach(r=>r.items.forEach(i=>{i.since=0;i.pending=null}));save();render()});
 });
